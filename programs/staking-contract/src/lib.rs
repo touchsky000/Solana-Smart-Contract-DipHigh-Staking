@@ -1,15 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    token::{
-        Token,
-        TokenAccount,
-        Mint
-    },
+    token,
     associated_token,
-    associated_token::AssociatedToken,
-    metadata::{
-        mpl_token_metadata::types::DataV2
-    },
 };
 
 declare_id!("8aspyEwJyJWnWffoCN36iA5asxXKi1aNjwbTQyQazBDs");
@@ -26,14 +18,15 @@ pub mod staking_contract {
 
     pub fn create_token(ctx: Context<CreateToken>, decimals: u8, amount: u64) -> Result<()> {
 
-        let cpi_system_program = system_program::CreateAccount {
+        let cpi_system_program = ctx.accounts.system_program.to_account_info();
+        let cpi_system_account = system_program::CreateAccount {
             from: ctx.accounts.signer.to_account_info(),
-            to: ctx.accounts.mint_token.to_account_info()
+            to: ctx.accounts.mint_token.to_account_info(),
         };
 
         let cpi_ctx = CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
-            cpi_system_program
+            cpi_system_program,
+            cpi_system_account
         );
 
         system_program::create_account(
@@ -43,13 +36,14 @@ pub mod staking_contract {
             ctx.accounts.token_program.key 
         )?;
 
+        let cpi_initialize_mint_program = ctx.accounts.token_program.to_account_info();
         let cpi_initialize_mint_account = token::InitializeMint{
             mint: ctx.accounts.mint_token.to_account_info(),
             rent: ctx.accounts.rent.to_account_info(),
         };
 
         let cpi_initialmint_ctx = CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
+            cpi_initialize_mint_program,
             cpi_initialize_mint_account,
         );
 
@@ -60,6 +54,9 @@ pub mod staking_contract {
             Some(ctx.accounts.signer.key)
         );
 
+
+        let cpi_associated_token_program = ctx.accounts.associated_token_program.to_account_info();
+
         let cpi_associated_token_account = associated_token::Create{
             payer: ctx.accounts.signer.to_account_info(),
             associated_token: ctx.accounts.token_account.to_account_info(),
@@ -69,14 +66,29 @@ pub mod staking_contract {
             token_program: ctx.accounts.token_program.to_account_info(),   
         };
 
-        let cpi_associated_token_program = ctx.accounts.associated_token_program.to_account_info();
-
         let cpi_associated_token_ctx = CpiContext::new(
             cpi_associated_token_program,
             cpi_associated_token_account
         );
 
         associated_token::create(cpi_associated_token_ctx)?;
+
+        let cpi_mint_program = ctx.accounts.token_account.to_account_info();
+        let cpi_mint_account = token::MintTo{
+            authority: ctx.accounts.signer.to_account_info(),
+            mint: ctx.accounts.mint_token.to_account_info(),
+            to: ctx.accounts.token_account.to_account_info()
+        };
+
+        let cpi_mint_ctx = CpiContext::new(
+            cpi_mint_program,
+            cpi_mint_account
+        );
+
+        token::mint_to(
+            cpi_mint_ctx,
+            amount
+        )?;
 
         Ok(())
     }
@@ -86,16 +98,16 @@ pub mod staking_contract {
 pub struct Initialize {}
 
 #[derive(Accounts)]
-pub struct CreateToken <'info> {
+pub struct CreateToken<'info> {
     #[account(mut)]
-    pub mint_token: Signer<'info>,
+    pub mint_token:Signer<'info>,
     #[account(mut)]
-    pub signer: Signer<'info>,
-    ///CHECK
-    pub token_account: AccountInfo<'info>,
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
-    pub rent: Sysvar<'info, Rent>
+    pub signer:Signer<'info>,
+    ///CHECK:
+    #[account(mut)]
+    pub token_account:AccountInfo<'info>,
+    pub system_program:Program<'info,System>,
+    pub token_program:Program<'info,token::Token>,
+    pub associated_token_program:Program<'info,associated_token::AssociatedToken>,
+    pub rent:Sysvar<'info,Rent>
 }
-
