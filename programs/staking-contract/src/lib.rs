@@ -92,6 +92,25 @@ pub mod staking_contract {
 
         Ok(())
     }
+
+    pub fn transfer_token(ctx:Context<TransferToken>, amount: u64) -> Result<()> {
+
+        let cpi_program = ctx.accounts.token_program.to_account_info();
+        let cpi_account = token::Transfer{
+            authority: ctx.accounts.signer.to_account_info(),
+            from: ctx.accounts.from_account.to_account_info(),
+            to: ctx.accounts.to_account.to_account_info()
+        };
+        let cpi_ctx = CpiContext::new(
+            cpi_program,
+            cpi_account
+        );
+        token::transfer(
+            cpi_ctx,
+            amount
+        )?;
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -110,4 +129,19 @@ pub struct CreateToken<'info> {
     pub token_program:Program<'info,token::Token>,
     pub associated_token_program:Program<'info,associated_token::AssociatedToken>,
     pub rent:Sysvar<'info,Rent>
+}
+
+#[derive(Accounts)]
+pub struct TransferToken<'info> {
+    #[account(mut)]
+    pub mint_token:Account<'info, token::Mint>,
+    #[account(mut)]
+    pub from_account: Account<'info, token::TokenAccount>,
+    #[account(mut)]
+    pub to_account: Account<'info, token::TokenAccount>,
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    pub system_program:Program<'info, System>,
+    pub token_program:Program<'info, token::Token>,
+    pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
 }
