@@ -37,7 +37,7 @@ describe("staking-contract", () => {
       console.log(`amount: ${accountData.amount}`);
     } catch (error) {
       // If PDA Account already created, then we expect an error
-      console.log(error);
+      console.log("already initialize");
     }
   });
  
