@@ -117,6 +117,7 @@ pub mod staking_contract {
 
     pub fn stake_spl_token(ctx:Context<StakeSplToken>, amount: u64) -> Result<()> {
 
+        let user_info_maker = &mut ctx.accounts.user_info_maker;
         let clock = Clock::get()?;
 
         let cpi_program = ctx.accounts.token_program.to_account_info();
@@ -133,6 +134,8 @@ pub mod staking_contract {
             cpi_ctx,
             amount
         )?;
+
+        user_info_maker.amount = user_info_maker.amount + amount;
 
         Ok(())
     }
