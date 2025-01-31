@@ -1,11 +1,11 @@
 [toolchain]
 
 [features]
-seeds = false
+seeds = true
 skip-lint = false
 
 [programs.localnet]
-staking_contract = "8aspyEwJyJWnWffoCN36iA5asxXKi1aNjwbTQyQazBDs"
+staking_contract = "76atSBbYCM5ZYro4E5PCU7oJEzYtoThDnYHWnvLi168M"
 
 [registry]
 url = "https://api.apr.dev"

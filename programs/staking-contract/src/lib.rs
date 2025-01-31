@@ -4,7 +4,7 @@ use anchor_spl::{
     associated_token,
 };
 
-declare_id!("8aspyEwJyJWnWffoCN36iA5asxXKi1aNjwbTQyQazBDs");
+declare_id!("76atSBbYCM5ZYro4E5PCU7oJEzYtoThDnYHWnvLi168M");
 
 #[program]
 pub mod staking_contract {
@@ -12,7 +12,9 @@ pub mod staking_contract {
     use anchor_lang::system_program;
     use anchor_spl::token;
 
-    pub fn initialize(_ctx: Context<Initialize>) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        let user_info_maker = &mut ctx.accounts.user_info_maker;
+        user_info_maker.bump = ctx.bumps.user_info_maker;
         Ok(())
     }
 
@@ -93,7 +95,7 @@ pub mod staking_contract {
         Ok(())
     }
 
-    pub fn transfer_token(ctx:Context<TransferToken>, amount: u64) -> Result<()> {
+    pub fn transfer_spl_token(ctx:Context<TransferSplToken>, amount: u64) -> Result<()> {
 
         let cpi_program = ctx.accounts.token_program.to_account_info();
         let cpi_account = token::Transfer{
@@ -111,10 +113,33 @@ pub mod staking_contract {
         )?;
         Ok(())
     }
+
+
+    pub fn stake_spl_token(ctx:Context<StakeSplToken>, amount: u64) -> Result<()> {
+
+        let clock = Clock::get()?;
+
+        let cpi_program = ctx.accounts.token_program.to_account_info();
+        let cpi_account = token::Transfer{
+            authority: ctx.accounts.signer.to_account_info(),
+            from: ctx.accounts.from_account.to_account_info(),
+            to: ctx.accounts.to_account.to_account_info()
+        };
+        let cpi_ctx = CpiContext::new(
+            cpi_program,
+            cpi_account
+        );
+        token::transfer(
+            cpi_ctx,
+            amount
+        )?;
+
+        Ok(())
+    }
+
+
 }
 
-#[derive(Accounts)]
-pub struct Initialize {}
 
 #[derive(Accounts)]
 pub struct CreateToken<'info> {
@@ -132,7 +157,7 @@ pub struct CreateToken<'info> {
 }
 
 #[derive(Accounts)]
-pub struct TransferToken<'info> {
+pub struct TransferSplToken<'info> {
     #[account(mut)]
     pub mint_token:Account<'info, token::Mint>,
     #[account(mut)]
@@ -144,4 +169,48 @@ pub struct TransferToken<'info> {
     pub system_program:Program<'info, System>,
     pub token_program:Program<'info, token::Token>,
     pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
+}
+
+#[derive(Accounts)]
+pub struct StakeSplToken<'info> {
+    #[account(mut)]
+    pub mint_token:Account<'info, token::Mint>,
+    #[account(mut)]
+    pub from_account: Account<'info, token::TokenAccount>,
+    #[account(mut)]
+    pub to_account: Account<'info, token::TokenAccount>,
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [b"user_info_maker"], // optional seeds for pda
+        bump = user_info_maker.bump, 
+    )]
+    pub user_info_maker: Account<'info, UserInfoMaker>,
+    pub system_program:Program<'info, System>,
+    pub token_program:Program<'info, token::Token>,
+    pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
+}
+
+#[derive(Accounts)]
+pub struct Initialize<'info> {
+    #[account(mut)]
+    pub user:Signer<'info>,
+    #[account(
+        init,
+        seeds = [b"user_info_maker"],
+        bump,
+        payer = user,
+        space = 8 + UserInfoMaker::INIT_SPACE
+    )]
+    pub user_info_maker: Account<'info, UserInfoMaker>,
+    pub system_program: Program<'info, System>,
+}
+
+
+#[account]
+#[derive(InitSpace)]
+pub struct UserInfoMaker{
+    pub amount: u64,
+    pub bump: u8
 }
