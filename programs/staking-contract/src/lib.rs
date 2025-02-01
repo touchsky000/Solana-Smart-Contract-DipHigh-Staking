@@ -28,6 +28,11 @@ pub mod staking_contract {
         let _ = stake_token(ctx, amount);
         Ok(())
     }
+
+    pub fn unstake_spl_token(ctx:Context<UnStakeSplToken>, amount: u64) -> Result<()> {
+        let _ = unstake_token(ctx, amount);
+        Ok(())
+    }
 }
 
 

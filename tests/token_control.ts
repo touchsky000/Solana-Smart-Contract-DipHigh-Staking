@@ -1,16 +1,23 @@
-const {
-    Connection,
+import * as anchor from "@coral-xyz/anchor";
+
+import {
     PublicKey,
     Transaction,
     ComputeBudgetProgram,
-} = require('@solana/web3.js');
-import * as anchor from "@coral-xyz/anchor";
-import { BN, Program } from "@coral-xyz/anchor";
+} from "@solana/web3.js";
+
+import {
+    BN,
+    Program,
+} from "@coral-xyz/anchor";
+
 import {
     ASSOCIATED_TOKEN_PROGRAM_ID,
     getAssociatedTokenAddressSync,
     createAssociatedTokenAccountIdempotentInstruction
 } from "@solana/spl-token"
+
+import { StakingContract } from "../target/types/staking_contract";
 
 export const derivePDA = async (mint, wallet, programId) => {
     try {
@@ -27,6 +34,25 @@ export const derivePDA = async (mint, wallet, programId) => {
     }
 }
 
+export const create_Token = async (
+    program: Program<StakingContract>,
+    provider: any,
+    MINT_ADDRESS: PublicKey,
+    signer: any,
+    decimal: number,
+    amount: BN
+) => {
+    const tokenAccount = anchor.utils.token.associatedAddress({ mint: MINT_ADDRESS, owner: provider.publicKey })
+    const tx = await program.methods.createToken(decimal, amount)
+        .accounts({
+            mintToken: MINT_ADDRESS,
+            tokenAccount: tokenAccount,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        })
+        .signers([signer])
+        .rpc()
+    return tx
+}
 export const createTransaction = () => {
     const transaction = new Transaction();
     transaction.add(
@@ -38,21 +64,29 @@ export const createTransaction = () => {
 }
 
 
-export const stake_token = async (provider, program, MINT_ADDRESS, USER_ADDRESS, programStandard) => {
+export const transfer_token = async (
+    provider: any,
+    program: Program<StakingContract>,
+    MINT_ADDRESS: PublicKey,
+    FROM_ADDRESS: PublicKey,
+    TO_ADDRESS: PublicKey,
+    amount: number,
+    programStandard: PublicKey
+) => {
     const transaction = createTransaction();
     const tokenAccount = anchor.utils.token.associatedAddress({ mint: MINT_ADDRESS, owner: provider.publicKey })
     const associatedToken = getAssociatedTokenAddressSync(
         MINT_ADDRESS,
-        provider.wallet.publicKey,
+        FROM_ADDRESS,
         false,
         programStandard
     );
 
     const senderAtaInstruction =
         createAssociatedTokenAccountIdempotentInstruction(
-            provider.wallet.publicKey,
+            FROM_ADDRESS,
             associatedToken,
-            provider.wallet.publicKey,
+            FROM_ADDRESS,
             MINT_ADDRESS,
             programStandard
         );
@@ -61,7 +95,7 @@ export const stake_token = async (provider, program, MINT_ADDRESS, USER_ADDRESS,
 
     const recipientAssociatedToken = getAssociatedTokenAddressSync(
         MINT_ADDRESS,
-        USER_ADDRESS,
+        TO_ADDRESS,
         false,
         programStandard
     );
@@ -70,7 +104,7 @@ export const stake_token = async (provider, program, MINT_ADDRESS, USER_ADDRESS,
         createAssociatedTokenAccountIdempotentInstruction(
             provider.wallet.publicKey,
             recipientAssociatedToken,
-            USER_ADDRESS,
+            TO_ADDRESS,
             MINT_ADDRESS,
             programStandard
         );
@@ -82,13 +116,11 @@ export const stake_token = async (provider, program, MINT_ADDRESS, USER_ADDRESS,
     // Fix: Ensure proper BN calculation
     const multiplier = new BN(10).pow(new BN(decimals));
     // const sendAmount = new BN(SEND_AMOUNT).mul(multiplier);
-    let send_amount = 1000 * 10 ** decimals;
-
-    console.log("Decimal =>", decimals)
+    let send_amount = amount * 10 ** decimals;
 
     transaction.add(
         await program.methods
-            .stakeSplToken(new anchor.BN(send_amount))
+            .transferSplToken(new anchor.BN(send_amount))
             .accounts({
                 mintToken: MINT_ADDRESS,
                 fromAccount: tokenAccount,
@@ -103,22 +135,29 @@ export const stake_token = async (provider, program, MINT_ADDRESS, USER_ADDRESS,
 }
 
 
-
-export const transfer_token = async (provider, program, MINT_ADDRESS, USER_ADDRESS, programStandard) => {
+export const stake_token = async (
+    provider: any,
+    program: Program<StakingContract>,
+    MINT_ADDRESS: PublicKey,
+    FROM_ADDRESS: PublicKey,
+    TO_ADDRESS: PublicKey,
+    amount: number,
+    programStandard: PublicKey
+) => {
     const transaction = createTransaction();
     const tokenAccount = anchor.utils.token.associatedAddress({ mint: MINT_ADDRESS, owner: provider.publicKey })
     const associatedToken = getAssociatedTokenAddressSync(
         MINT_ADDRESS,
-        provider.wallet.publicKey,
+        FROM_ADDRESS,
         false,
         programStandard
     );
 
     const senderAtaInstruction =
         createAssociatedTokenAccountIdempotentInstruction(
-            provider.wallet.publicKey,
+            FROM_ADDRESS,
             associatedToken,
-            provider.wallet.publicKey,
+            FROM_ADDRESS,
             MINT_ADDRESS,
             programStandard
         );
@@ -127,7 +166,7 @@ export const transfer_token = async (provider, program, MINT_ADDRESS, USER_ADDRE
 
     const recipientAssociatedToken = getAssociatedTokenAddressSync(
         MINT_ADDRESS,
-        USER_ADDRESS,
+        TO_ADDRESS,
         false,
         programStandard
     );
@@ -136,7 +175,7 @@ export const transfer_token = async (provider, program, MINT_ADDRESS, USER_ADDRE
         createAssociatedTokenAccountIdempotentInstruction(
             provider.wallet.publicKey,
             recipientAssociatedToken,
-            USER_ADDRESS,
+            TO_ADDRESS,
             MINT_ADDRESS,
             programStandard
         );
@@ -148,13 +187,11 @@ export const transfer_token = async (provider, program, MINT_ADDRESS, USER_ADDRE
     // Fix: Ensure proper BN calculation
     const multiplier = new BN(10).pow(new BN(decimals));
     // const sendAmount = new BN(SEND_AMOUNT).mul(multiplier);
-    let send_amount = 1000 * 10 ** decimals;
-
-    console.log("Decimal =>", decimals)
+    let send_amount = amount * 10 ** decimals;
 
     transaction.add(
         await program.methods
-            .transferSplToken(new anchor.BN(send_amount))
+            .stakeSplToken(new anchor.BN(send_amount))
             .accounts({
                 mintToken: MINT_ADDRESS,
                 fromAccount: tokenAccount,
