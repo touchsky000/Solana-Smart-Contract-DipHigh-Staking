@@ -2,7 +2,7 @@ use crate::library::*;
 use anchor_lang::prelude::*;
 mod library;
 
-declare_id!("76atSBbYCM5ZYro4E5PCU7oJEzYtoThDnYHWnvLi168M");
+declare_id!("FLQe7RZjKMF22JAAC38qQUUGbVpt3sj1SCQ6Mji95iv6");
 
 #[program]
 pub mod staking_contract {

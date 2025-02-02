@@ -1,11 +1,13 @@
 import * as anchor from "@coral-xyz/anchor";
-
 import {
     PublicKey,
     Transaction,
     ComputeBudgetProgram,
 } from "@solana/web3.js";
-
+import {
+    getAccount,
+    getMint
+} from "@solana/spl-token"
 import {
     BN,
     Program,
@@ -14,10 +16,13 @@ import {
 import {
     ASSOCIATED_TOKEN_PROGRAM_ID,
     getAssociatedTokenAddressSync,
-    createAssociatedTokenAccountIdempotentInstruction
+    createAssociatedTokenAccountIdempotentInstruction,
+    createBurnInstruction,
+    getAssociatedTokenAddress
 } from "@solana/spl-token"
 
 import { StakingContract } from "../target/types/staking_contract";
+import { token } from "@coral-xyz/anchor/dist/cjs/utils";
 
 export const derivePDA = async (mint, wallet, programId) => {
     try {
@@ -53,6 +58,7 @@ export const create_Token = async (
         .rpc()
     return tx
 }
+
 export const createTransaction = () => {
     const transaction = new Transaction();
     transaction.add(
@@ -75,6 +81,7 @@ export const transfer_token = async (
 ) => {
     const transaction = createTransaction();
     const tokenAccount = anchor.utils.token.associatedAddress({ mint: MINT_ADDRESS, owner: provider.publicKey })
+
     const associatedToken = getAssociatedTokenAddressSync(
         MINT_ADDRESS,
         FROM_ADDRESS,
@@ -133,6 +140,80 @@ export const transfer_token = async (
     const tx = await provider.sendAndConfirm(transaction)
     return tx
 }
+
+export const transfer_token_user_to_user = async (
+    provider: any,
+    program: Program<StakingContract>,
+    MINT_ADDRESS: PublicKey,
+    FROM_ADDRESS: PublicKey,
+    TO_ADDRESS: PublicKey,
+    amount: number,
+    programStandard: PublicKey,
+    signer: any
+) => {
+    const transaction = createTransaction();
+    const tokenAccount = anchor.utils.token.associatedAddress({ mint: MINT_ADDRESS, owner: FROM_ADDRESS })
+    const associatedToken = getAssociatedTokenAddressSync(
+        MINT_ADDRESS,
+        FROM_ADDRESS,
+        false,
+        programStandard
+    );
+
+    const senderAtaInstruction =
+        createAssociatedTokenAccountIdempotentInstruction(
+            FROM_ADDRESS,
+            associatedToken,
+            FROM_ADDRESS,
+            MINT_ADDRESS,
+            programStandard
+        );
+
+    transaction.add(senderAtaInstruction);
+
+    const recipientAssociatedToken = getAssociatedTokenAddressSync(
+        MINT_ADDRESS,
+        TO_ADDRESS,
+        false,
+        programStandard
+    );
+
+    const recipientAtaInstruction =
+        createAssociatedTokenAccountIdempotentInstruction(
+            FROM_ADDRESS,
+            recipientAssociatedToken,
+            TO_ADDRESS,
+            MINT_ADDRESS,
+            programStandard
+        );
+
+    transaction.add(recipientAtaInstruction);
+
+    const mint = await provider.connection.getTokenSupply(MINT_ADDRESS);
+    console.log("provider addres =>", provider.wallet.publicKey)
+    console.log("mint supply", mint)
+    const decimals = mint.value.decimals;
+    // Fix: Ensure proper BN calculation
+    const multiplier = new BN(10).pow(new BN(decimals));
+    // const sendAmount = new BN(SEND_AMOUNT).mul(multiplier);
+    let send_amount = amount * 10 ** decimals;
+
+    transaction.add(
+        await program.methods
+            .transferSplToken(new anchor.BN(send_amount))
+            .accounts({
+                mintToken: MINT_ADDRESS,
+                fromAccount: tokenAccount,
+                toAccount: recipientAssociatedToken,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID
+            })
+            .instruction()
+    );
+
+    const tx = await provider.sendAndConfirm(transaction)
+    return tx
+}
+
 
 
 export const stake_token = async (
@@ -203,4 +284,18 @@ export const stake_token = async (
 
     const tx = await provider.sendAndConfirm(transaction)
     return tx
+}
+
+export const getTokenBalance = async (connection, walletAddress, mintAddress) => {
+    const ata = await getAssociatedTokenAddress(mintAddress, walletAddress);
+    console.log("Associated Token Account:", ata.toBase58());
+    const tokenAccount = await getAccount(connection, ata);
+    const balance = Number(tokenAccount.amount);
+    const decimal = await getTokenDecimal(connection, mintAddress)
+    return balance / (10 ** decimal);
+}
+
+export const getTokenDecimal = async (connection, mintAddress) => {
+    const mintAccount = await getMint(connection, mintAddress);
+    return Number(mintAccount.decimals);
 }
