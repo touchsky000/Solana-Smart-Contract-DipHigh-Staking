@@ -20,71 +20,78 @@ import {
   stake_token,
   create_Token,
   transfer_token_user_to_user,
-  getTokenBalance
+  getTokenBalance,
+  create_Token_with_provider
 } from "./token_control";
 
-describe("test staking-contract", () => {
-  const user1 = Keypair.generate()
-  const user2 = Keypair.generate()
-
+describe("test staking-contract", async () => {
+  const user1 = Keypair.fromSecretKey(Uint8Array.from(require('./us1hbhq71B8B865ARa3NkYfKn8fwn771bgMZdCdzyiy.json')))
+  const user2 = Keypair.fromSecretKey(Uint8Array.from(require('./us2P2tY6Tf8T5cacUJ8NzmA6mmxS2bDh7onftgGJaty.json')))
+  const user3 = Keypair.fromSecretKey(Uint8Array.from(require('./us3LpDfaodp916sYrQdW13jbKT2ptZjNdb3Hcm6xvPu.json')))
   console.log("user1 =>", user1.publicKey.toBase58())
   console.log("user2 =>", user2.publicKey.toBase58())
+  console.log("user3 =>", user3.publicKey.toBase58())
 
   const adminProvider = anchor.AnchorProvider.env()
-  // anchor.setProvider(provider);
-
   const user1Provider = new anchor.AnchorProvider(
     adminProvider.connection, // You can use the same connection
     new anchor.Wallet(user1),
     adminProvider.opts
   );
-
-  anchor.setProvider(user1Provider)
-
   const user2Provider = new anchor.AnchorProvider(
     adminProvider.connection,
     new anchor.Wallet(user2),
     adminProvider.opts
   )
+  const user3Provider = new anchor.AnchorProvider(
+    adminProvider.connection,
+    new anchor.Wallet(user3),
+    adminProvider.opts
+  )
 
-  // anchor.setProvider(user1Provider)
+  anchor.setProvider(user1Provider)
 
-  before(async () => {
-    const sign1 = await user1Provider.connection.requestAirdrop(user1.publicKey, LAMPORTS_PER_SOL)
-    const sign2 = await user2Provider.connection.requestAirdrop(user2.publicKey, LAMPORTS_PER_SOL)
 
-    await adminProvider.connection.confirmTransaction(sign1)
-    await adminProvider.connection.confirmTransaction(sign2)
-    
-    console.log("user1 airdrop =>", sign1)
-    console.log("user2 airdrop =>", sign2)
+  it("Airdrop SOL to test users", async () => {
+    const airdropAmount = 1000000 * anchor.web3.LAMPORTS_PER_SOL;
 
-    const balanceUser1 = await adminProvider.connection.getBalance(user1.publicKey)
-    const balanceUser2 = await adminProvider.connection.getBalance(user2.publicKey)
+    await adminProvider.connection.confirmTransaction(
+      await adminProvider.connection.requestAirdrop(user1.publicKey, airdropAmount),
+      "confirmed"
+    );
 
-    console.log("user1 balance => ", balanceUser1)
-    console.log("user2 balance => ", balanceUser2)
-  })
+    await adminProvider.connection.confirmTransaction(
+      await adminProvider.connection.requestAirdrop(user2.publicKey, airdropAmount),
+      "confirmed"
+    );
+
+    await adminProvider.connection.confirmTransaction(
+      await adminProvider.connection.requestAirdrop(user3.publicKey, airdropAmount),
+      "confirmed"
+    );
+
+    console.log("Airdrop completed for both users!");
+  });
 
   const program = anchor.workspace.StakingContract as Program<StakingContract>;
-  const mintToken = anchor.web3.Keypair.generate()
+  const mintToken = Keypair.fromSecretKey(Uint8Array.from(require('./mntrKJfjURt4LFq7VF6RxkzprQwSbRvp9aN3WAM4JNf.json')));
+  // const mintToken = Keypair.generate()
 
-
-  it("get pda", async() => {
+  it("get pda", async () => {
+    const provider = adminProvider
     const pda = await derivePDA(
       mintToken.publicKey,
-      user1Provider.wallet.publicKey,
+      provider.wallet.publicKey,
       program.programId
     )
     console.log('pda =>', pda)
   })
-  it("Is pda acc initialized!", async () => {
 
+  it("Is pda acc initialized!", async () => {
     const [userInfoPDA] = PublicKey.findProgramAddressSync(
       [Buffer.from("user_info_maker")],
       program.programId
     )
-
     try {
       const txSig = await program.methods
         .initialize()
@@ -104,11 +111,9 @@ describe("test staking-contract", () => {
   it("Create Token", async () => {
     const decimal = 9
     const amount = new anchor.BN("100000000000000000")
-
-    const provider = user1Provider
     const tx = await create_Token(
       program,
-      provider,
+      adminProvider,
       mintToken.publicKey,
       mintToken,
       decimal,
@@ -117,13 +122,13 @@ describe("test staking-contract", () => {
     console.log("tx =>", tx)
   })
 
-  it("Transfer Token admin", async () => {
-    const amount = 1000
-    const provider = user1Provider
+  it("Transfer Token from admin to user1", async () => {
+    const amount = 100000
+    const provider = adminProvider
     const programStandard = TOKEN_PROGRAM_ID;
     const MINT_ADDRESS = mintToken.publicKey
-    const TO_ADDRESS = user2.publicKey
     const FROM_ADDRESS = provider.wallet.publicKey
+    const TO_ADDRESS = user1.publicKey
 
     const tx = await transfer_token(
       provider,
@@ -135,38 +140,93 @@ describe("test staking-contract", () => {
       programStandard
     )
 
-    console.log(`token ${MINT_ADDRESS} transfer ${amount} to user1: ${user1.publicKey}`)
+    console.log(`token ${MINT_ADDRESS} transfer ${amount} to user1: ${TO_ADDRESS}`)
 
     const balance = await getTokenBalance(
       provider.connection,
-      user2.publicKey,
+      TO_ADDRESS,
+      mintToken.publicKey,
+    )
+    console.log("user balance =>", balance)
+  })
+
+  it("Transfer Token from admin to user2", async () => {
+    const amount = 100000
+    const provider = adminProvider
+    const programStandard = TOKEN_PROGRAM_ID;
+    const MINT_ADDRESS = mintToken.publicKey
+    const FROM_ADDRESS = provider.wallet.publicKey
+    const TO_ADDRESS = user2.publicKey
+
+    const tx = await transfer_token(
+      provider,
+      program,
+      MINT_ADDRESS,
+      FROM_ADDRESS,
+      TO_ADDRESS,
+      amount,
+      programStandard
+    )
+
+    console.log(`token ${MINT_ADDRESS} transfer ${amount} to user2: ${TO_ADDRESS}`)
+
+    const balance = await getTokenBalance(
+      provider.connection,
+      TO_ADDRESS,
+      mintToken.publicKey,
+    )
+    console.log("user balance =>", balance)
+  })
+
+  it("Transfer Token from admin to user3", async () => {
+    const amount = 100000
+    const provider = adminProvider
+    const programStandard = TOKEN_PROGRAM_ID;
+    const MINT_ADDRESS = mintToken.publicKey
+    const FROM_ADDRESS = provider.wallet.publicKey
+    const TO_ADDRESS = user3.publicKey
+
+    const tx = await transfer_token(
+      provider,
+      program,
+      MINT_ADDRESS,
+      FROM_ADDRESS,
+      TO_ADDRESS,
+      amount,
+      programStandard
+    )
+
+    console.log(`token ${MINT_ADDRESS} transfer ${amount} to user2: ${TO_ADDRESS}`)
+
+    const balance = await getTokenBalance(
+      provider.connection,
+      TO_ADDRESS,
       mintToken.publicKey,
     )
     console.log("user balance =>", balance)
   })
 
 
-  // it("Transfer Token from user to user", async () => {
+  it("Transfer Token from user1 to user2", async () => {
 
-  //   anchor.setProvider(user1Provider)
+    const provider = user1Provider
 
-  //   const amount = 1000
-  //   const programStandard = TOKEN_PROGRAM_ID;
-  //   const MINT_ADDRESS = mintToken.publicKey
-  //   const FROM_ADDRESS = user1.publicKey
-  //   const TO_ADDRESS = user2.publicKey
-  //   const programId = program.programId;
+    const amount = 1000
+    const programStandard = TOKEN_PROGRAM_ID;
+    const MINT_ADDRESS = mintToken.publicKey
+    const FROM_ADDRESS = provider.wallet.publicKey
+    const TO_ADDRESS = user2.publicKey
+    anchor.setProvider(provider)
+    const tx = await transfer_token_user_to_user(
+      provider,
+      program,
+      MINT_ADDRESS,
+      FROM_ADDRESS,
+      TO_ADDRESS,
+      amount,
+      programStandard
+    )
+    console.log("Tx =>", tx)
 
-  //   const tx = await transfer_token_user_to_user(
-  //     user1Provider,
-  //     program,
-  //     MINT_ADDRESS,
-  //     FROM_ADDRESS,
-  //     TO_ADDRESS,
-  //     amount,
-  //     programStandard,
-  //     provider.wallet
-  //   )
-  //   console.log("Tx =>", tx)
-  // })
+  })
 });

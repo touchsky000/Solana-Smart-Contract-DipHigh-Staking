@@ -3,6 +3,7 @@ import {
     PublicKey,
     Transaction,
     ComputeBudgetProgram,
+    Keypair
 } from "@solana/web3.js";
 import {
     getAccount,
@@ -41,23 +42,73 @@ export const derivePDA = async (mint, wallet, programId) => {
 
 export const create_Token = async (
     program: Program<StakingContract>,
-    provider: any,
+    provider: anchor.AnchorProvider,
     MINT_ADDRESS: PublicKey,
-    signer: any,
+    signer: Keypair,  // Explicitly expect a Keypair as the signer
     decimal: number,
     amount: BN
 ) => {
-    const tokenAccount = anchor.utils.token.associatedAddress({ mint: MINT_ADDRESS, owner: provider.publicKey })
+    // Ensure provider is correctly set
+
+    // Derive the associated token account
+    const tokenAccount = await getAssociatedTokenAddress(
+        MINT_ADDRESS,
+        provider.wallet.publicKey // Correct way to get provider's public key
+    );
+
+    console.log("Using provider:", provider.wallet.publicKey.toBase58());
+    console.log("Derived Token Account:", tokenAccount.toBase58());
+
+    // Send transaction to create token
     const tx = await program.methods.createToken(decimal, amount)
         .accounts({
             mintToken: MINT_ADDRESS,
             tokenAccount: tokenAccount,
             associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         })
-        .signers([signer])
-        .rpc()
+        .signers([signer])  // Ensure signer is correct
+        .rpc();
+
+    console.log("Token Creation Transaction:", tx);
+    return tx;
+};
+
+
+export const create_Token_with_provider = async (
+    program: Program<StakingContract>,
+    provider: anchor.AnchorProvider,
+    MINT_ADDRESS: PublicKey,
+    signer: Keypair,  // Explicitly expect a Keypair as the signer
+    decimal: number,
+    amount: BN
+) => {
+    // Ensure provider is correctly set
+
+    // Derive the associated token account
+    const transaction = createTransaction();
+    const tokenAccount = await getAssociatedTokenAddress(
+        MINT_ADDRESS,
+        provider.wallet.publicKey // Correct way to get provider's public key
+    );
+
+    console.log("Using provider:", provider.wallet.publicKey.toBase58());
+    console.log("Derived Token Account:", tokenAccount.toBase58());
+
+    transaction.add(
+        await program.methods
+            .createToken(decimal, amount)
+            .accounts({
+                mintToken: MINT_ADDRESS,
+                tokenAccount: tokenAccount,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            })
+            .signers([signer])
+            .instruction()
+    );
+
+    const tx = await provider.sendAndConfirm(transaction)
     return tx
-}
+};
 
 export const createTransaction = () => {
     const transaction = new Transaction();
@@ -68,7 +119,6 @@ export const createTransaction = () => {
     );
     return transaction;
 }
-
 
 export const transfer_token = async (
     provider: any,
@@ -149,7 +199,6 @@ export const transfer_token_user_to_user = async (
     TO_ADDRESS: PublicKey,
     amount: number,
     programStandard: PublicKey,
-    signer: any
 ) => {
     const transaction = createTransaction();
     const tokenAccount = anchor.utils.token.associatedAddress({ mint: MINT_ADDRESS, owner: FROM_ADDRESS })
@@ -190,8 +239,6 @@ export const transfer_token_user_to_user = async (
     transaction.add(recipientAtaInstruction);
 
     const mint = await provider.connection.getTokenSupply(MINT_ADDRESS);
-    console.log("provider addres =>", provider.wallet.publicKey)
-    console.log("mint supply", mint)
     const decimals = mint.value.decimals;
     // Fix: Ensure proper BN calculation
     const multiplier = new BN(10).pow(new BN(decimals));
@@ -210,11 +257,10 @@ export const transfer_token_user_to_user = async (
             .instruction()
     );
 
+    console.log("provider =>", provider.publicKey)
     const tx = await provider.sendAndConfirm(transaction)
     return tx
 }
-
-
 
 export const stake_token = async (
     provider: any,
