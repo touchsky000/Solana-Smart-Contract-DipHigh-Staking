@@ -1,8 +1,8 @@
-use crate::library::*;
+use crate::instructions::*;
 use anchor_lang::prelude::*;
-mod library;
+mod instructions;
 
-declare_id!("HkskjKB3HNHTJFjm1LfZSZ9YMadAUayC8xCRAKPiefw5");
+declare_id!("NfdL7EZNbJ6S5TDqme6N88wmjrYJbK6QSvD7LFjFWC6");
 
 #[program]
 pub mod staking_contract {
@@ -15,24 +15,25 @@ pub mod staking_contract {
     }
 
     pub fn create_token(ctx: Context<CreateToken>, decimals: u8, amount: u64) -> Result<()> {
-        let _ = token_mint(ctx, decimals, amount);
+        let _ = instructions::token_mint(ctx, decimals, amount);
         Ok(())
     }
 
-    pub fn transfer_spl_token(ctx:Context<TransferSplToken>, amount: u64) -> Result<()> {
-        let _ = token_transfer(ctx , amount);
+    pub fn token_transfer(ctx: Context<TransferSplToken>, amount: u64) -> Result<()> {
+        let _ = instructions::token_transfer(ctx, amount);
         Ok(())
     }
 
-    pub fn stake_spl_token(ctx:Context<StakeSplToken>, amount: u64) -> Result<()> {
-        let _ = stake_token(ctx, amount);
+    pub fn deposite_token(ctx:Context<DepositeTokenPda>, amount: u64) -> Result<()> {
+        let _ = instructions::deposite_token_pda(ctx , amount);
         Ok(())
     }
 
-    pub fn unstake_spl_token(ctx:Context<UnStakeSplToken>, amount: u64) -> Result<()> {
-        let _ = unstake_token(ctx, amount);
+    pub fn claim_reward_token(ctx:Context<ClaimTokenPda>, amount: u64) -> Result<()> {
+        let _ = instructions::claim_token_pda(ctx, amount);
         Ok(())
     }
+
 }
 
 
@@ -48,6 +49,15 @@ pub struct Initialize<'info> {
         space = 8 + UserInfoMaker::INIT_SPACE
     )]
     pub user_info_maker: Account<'info, UserInfoMaker>,
+    ///CHECK:
+    #[account(
+        init,
+        payer = user,
+        space = 8 * 100,
+        seeds = [b"token_vault".as_ref()],
+        bump
+    )]
+    pub token_vault: AccountInfo<'info>,
     pub system_program: Program<'info, System>,
 }
 

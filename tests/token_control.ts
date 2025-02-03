@@ -19,7 +19,8 @@ import {
     getAssociatedTokenAddressSync,
     createAssociatedTokenAccountIdempotentInstruction,
     createBurnInstruction,
-    getAssociatedTokenAddress
+    getAssociatedTokenAddress,
+    createAssociatedTokenAccountInstruction
 } from "@solana/spl-token"
 
 import { StakingContract } from "../target/types/staking_contract";
@@ -130,9 +131,8 @@ export const transfer_token = async (
     programStandard: PublicKey
 ) => {
     const transaction = createTransaction();
-    const tokenAccount = anchor.utils.token.associatedAddress({ mint: MINT_ADDRESS, owner: provider.publicKey })
 
-    const associatedToken = getAssociatedTokenAddressSync(
+    const senderAta = getAssociatedTokenAddressSync(
         MINT_ADDRESS,
         FROM_ADDRESS,
         false,
@@ -142,7 +142,7 @@ export const transfer_token = async (
     const senderAtaInstruction =
         createAssociatedTokenAccountIdempotentInstruction(
             FROM_ADDRESS,
-            associatedToken,
+            senderAta,
             FROM_ADDRESS,
             MINT_ADDRESS,
             programStandard
@@ -150,7 +150,7 @@ export const transfer_token = async (
 
     transaction.add(senderAtaInstruction);
 
-    const recipientAssociatedToken = getAssociatedTokenAddressSync(
+    const receiverAta = getAssociatedTokenAddressSync(
         MINT_ADDRESS,
         TO_ADDRESS,
         false,
@@ -160,7 +160,7 @@ export const transfer_token = async (
     const recipientAtaInstruction =
         createAssociatedTokenAccountIdempotentInstruction(
             provider.wallet.publicKey,
-            recipientAssociatedToken,
+            receiverAta,
             TO_ADDRESS,
             MINT_ADDRESS,
             programStandard
@@ -177,11 +177,11 @@ export const transfer_token = async (
 
     transaction.add(
         await program.methods
-            .transferSplToken(new anchor.BN(send_amount))
+            .tokenTransfer(new anchor.BN(send_amount))
             .accounts({
                 mintToken: MINT_ADDRESS,
-                fromAccount: tokenAccount,
-                toAccount: recipientAssociatedToken,
+                fromAccount: senderAta,
+                toAccount: receiverAta,
                 associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID
             })
             .instruction()
@@ -201,8 +201,7 @@ export const transfer_token_user_to_user = async (
     programStandard: PublicKey,
 ) => {
     const transaction = createTransaction();
-    const tokenAccount = anchor.utils.token.associatedAddress({ mint: MINT_ADDRESS, owner: FROM_ADDRESS })
-    const associatedToken = getAssociatedTokenAddressSync(
+    const senderAta = getAssociatedTokenAddressSync(
         MINT_ADDRESS,
         FROM_ADDRESS,
         false,
@@ -212,7 +211,7 @@ export const transfer_token_user_to_user = async (
     const senderAtaInstruction =
         createAssociatedTokenAccountIdempotentInstruction(
             FROM_ADDRESS,
-            associatedToken,
+            senderAta,
             FROM_ADDRESS,
             MINT_ADDRESS,
             programStandard
@@ -220,7 +219,7 @@ export const transfer_token_user_to_user = async (
 
     transaction.add(senderAtaInstruction);
 
-    const recipientAssociatedToken = getAssociatedTokenAddressSync(
+    const receiverAta = getAssociatedTokenAddressSync(
         MINT_ADDRESS,
         TO_ADDRESS,
         false,
@@ -230,7 +229,7 @@ export const transfer_token_user_to_user = async (
     const recipientAtaInstruction =
         createAssociatedTokenAccountIdempotentInstruction(
             FROM_ADDRESS,
-            recipientAssociatedToken,
+            receiverAta,
             TO_ADDRESS,
             MINT_ADDRESS,
             programStandard
@@ -247,17 +246,16 @@ export const transfer_token_user_to_user = async (
 
     transaction.add(
         await program.methods
-            .transferSplToken(new anchor.BN(send_amount))
+            .tokenTransfer(new anchor.BN(send_amount))
             .accounts({
                 mintToken: MINT_ADDRESS,
-                fromAccount: tokenAccount,
-                toAccount: recipientAssociatedToken,
+                fromAccount: senderAta,
+                toAccount: receiverAta,
                 associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID
             })
             .instruction()
     );
 
-    console.log("provider =>", provider.publicKey)
     const tx = await provider.sendAndConfirm(transaction)
     return tx
 }
@@ -266,48 +264,45 @@ export const stake_token = async (
     provider: any,
     program: Program<StakingContract>,
     MINT_ADDRESS: PublicKey,
-    FROM_ADDRESS: PublicKey,
-    TO_ADDRESS: PublicKey,
+    USER_ADDRESS: PublicKey,
+    TOKEN_VAULT_ADDRESS: PublicKey,
     amount: number,
     programStandard: PublicKey
 ) => {
     const transaction = createTransaction();
-    const tokenAccount = anchor.utils.token.associatedAddress({ mint: MINT_ADDRESS, owner: provider.publicKey })
-    const associatedToken = getAssociatedTokenAddressSync(
+    const userAta = getAssociatedTokenAddressSync(
         MINT_ADDRESS,
-        FROM_ADDRESS,
-        false,
+        USER_ADDRESS,
+        true,
+    );
+
+    const usererAtaInstruction =
+        createAssociatedTokenAccountIdempotentInstruction(
+            USER_ADDRESS,
+            userAta,
+            USER_ADDRESS,
+            MINT_ADDRESS,
+        );
+
+    transaction.add(usererAtaInstruction);
+
+    const tokenVaultAta = getAssociatedTokenAddressSync(
+        MINT_ADDRESS,
+        TOKEN_VAULT_ADDRESS,
+        true,
         programStandard
     );
 
-    const senderAtaInstruction =
+    const tokenVaultAtaInstruction =
         createAssociatedTokenAccountIdempotentInstruction(
-            FROM_ADDRESS,
-            associatedToken,
-            FROM_ADDRESS,
+            USER_ADDRESS,
+            tokenVaultAta,
+            TOKEN_VAULT_ADDRESS,
             MINT_ADDRESS,
             programStandard
         );
 
-    transaction.add(senderAtaInstruction);
-
-    const recipientAssociatedToken = getAssociatedTokenAddressSync(
-        MINT_ADDRESS,
-        TO_ADDRESS,
-        false,
-        programStandard
-    );
-
-    const recipientAtaInstruction =
-        createAssociatedTokenAccountIdempotentInstruction(
-            provider.wallet.publicKey,
-            recipientAssociatedToken,
-            TO_ADDRESS,
-            MINT_ADDRESS,
-            programStandard
-        );
-
-    transaction.add(recipientAtaInstruction);
+    transaction.add(tokenVaultAtaInstruction);
 
     const mint = await provider.connection.getTokenSupply(MINT_ADDRESS);
     const decimals = mint.value.decimals;
@@ -318,12 +313,10 @@ export const stake_token = async (
 
     transaction.add(
         await program.methods
-            .stakeSplToken(new anchor.BN(send_amount))
+            .depositeToken(new anchor.BN(send_amount))
             .accounts({
-                mintToken: MINT_ADDRESS,
-                fromAccount: tokenAccount,
-                toAccount: recipientAssociatedToken,
-                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID
+                userAta: userAta,
+                tokenVaultAta: tokenVaultAta
             })
             .instruction()
     );
@@ -331,6 +324,75 @@ export const stake_token = async (
     const tx = await provider.sendAndConfirm(transaction)
     return tx
 }
+
+export const claim_token = async (
+    provider: any,
+    program: Program<StakingContract>,
+    MINT_ADDRESS: PublicKey,
+    USER_ADDRESS: PublicKey,
+    TOKEN_VAULT_ADDRESS: PublicKey,
+    amount: number,
+    programStandard: PublicKey
+) => {
+
+    const transaction = createTransaction();
+
+    const userAta = getAssociatedTokenAddressSync(
+        MINT_ADDRESS,
+        USER_ADDRESS,
+        true,
+        programStandard
+    );
+
+    const usererAtaInstruction =
+        createAssociatedTokenAccountIdempotentInstruction(
+            USER_ADDRESS,
+            userAta,
+            USER_ADDRESS,
+            MINT_ADDRESS,
+        );
+
+    transaction.add(usererAtaInstruction);
+
+    const tokenVaultAta = getAssociatedTokenAddressSync(
+        MINT_ADDRESS,
+        TOKEN_VAULT_ADDRESS,
+        true,
+    );
+
+    const tokenVaultAtaInstruction =
+        createAssociatedTokenAccountIdempotentInstruction(
+            USER_ADDRESS,
+            tokenVaultAta,
+            TOKEN_VAULT_ADDRESS,
+            MINT_ADDRESS,
+        );
+
+    transaction.add(tokenVaultAtaInstruction);
+
+    const mint = await provider.connection.getTokenSupply(MINT_ADDRESS);
+    const decimals = mint.value.decimals;
+    // Fix: Ensure proper BN calculation
+    const multiplier = new BN(10).pow(new BN(decimals));
+    // const sendAmount = new BN(SEND_AMOUNT).mul(multiplier);
+    let send_amount = amount * 10 ** decimals;
+
+    const claimSign = await program.methods
+        .claimRewardToken(new anchor.BN(send_amount))
+        .accounts({
+            userAta: userAta,
+            tokenVaultAta: tokenVaultAta
+        })
+        .instruction()
+
+    transaction.add(claimSign);
+
+    const tx = await provider.sendAndConfirm(transaction)
+    console.log("tx =>", tx)
+    return tx
+}
+
+
 
 export const getTokenBalance = async (connection, walletAddress, mintAddress) => {
     const ata = await getAssociatedTokenAddress(mintAddress, walletAddress);
