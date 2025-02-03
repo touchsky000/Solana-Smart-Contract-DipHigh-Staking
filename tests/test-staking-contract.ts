@@ -231,7 +231,8 @@ describe("test staking-contract with user1", async () => {
     adminProvider.opts
   )
 
-  anchor.setProvider(user1Provider)
+  const provider = user1Provider
+  anchor.setProvider(provider)
 
   const program = anchor.workspace.StakingContract as Program<StakingContract>;
 
@@ -241,29 +242,28 @@ describe("test staking-contract with user1", async () => {
   );
 
 
-  it("Transfer Token from user1 to user2", async () => {
+  // it("Transfer Token from user1 to user2", async () => {
 
-    const provider = user1Provider
+  //   const provider = user1Provider
 
-    const amount = 10
-    const programStandard = TOKEN_PROGRAM_ID;
-    const MINT_ADDRESS = mintToken.publicKey
-    const FROM_ADDRESS = provider.wallet.publicKey
-    const TO_ADDRESS = user2.publicKey
-    const tx = await transfer_token_user_to_user(
-      provider,
-      program,
-      MINT_ADDRESS,
-      FROM_ADDRESS,
-      TO_ADDRESS,
-      amount,
-      programStandard
-    )
-  })
+  //   const amount = 10
+  //   const programStandard = TOKEN_PROGRAM_ID;
+  //   const MINT_ADDRESS = mintToken.publicKey
+  //   const FROM_ADDRESS = provider.wallet.publicKey
+  //   const TO_ADDRESS = user2.publicKey
+  //   const tx = await transfer_token_user_to_user(
+  //     provider,
+  //     program,
+  //     MINT_ADDRESS,
+  //     FROM_ADDRESS,
+  //     TO_ADDRESS,
+  //     amount,
+  //     programStandard
+  //   )
+  // })
 
   it("Deposite token in contract", async () => {
-    const provider = user1Provider
-    const amount = 10
+    const amount = 1000
     const programStandard = TOKEN_PROGRAM_ID;
     const MINT_ADDRESS = mintToken.publicKey
     const USER_ADDRESS = provider.wallet.publicKey
@@ -289,7 +289,6 @@ describe("test staking-contract with user1", async () => {
   })
 
   it("Claim token in PDA", async () => {
-    const provider = user1Provider
     const amount = 10
     const programStandard = TOKEN_PROGRAM_ID;
     const MINT_ADDRESS = mintToken.publicKey

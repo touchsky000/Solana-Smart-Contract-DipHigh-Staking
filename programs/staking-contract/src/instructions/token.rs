@@ -4,6 +4,7 @@ use anchor_spl::{
     associated_token
 };
 use anchor_lang::system_program;
+use crate::state::*;
 
 pub fn token_mint(ctx:Context<CreateToken>, decimals: u8, amount: u64) -> Result<()>{
     let cpi_system_program = ctx.accounts.system_program.to_account_info();
@@ -100,37 +101,4 @@ pub fn token_transfer(ctx:Context<TransferSplToken>, amount: u64) -> Result<()>{
     Ok(())
 }
 
-
-#[derive(Accounts)]
-#[instruction()]
-pub struct CreateToken<'info> {
-    #[account(mut)]
-    pub mint_token:Signer<'info>,
-    #[account(mut)]
-    pub signer:Signer<'info>,
-    ///CHECK:
-    #[account(mut)]
-    pub token_account:AccountInfo<'info>,
-    pub system_program:Program<'info,System>,
-    pub token_program:Program<'info,token::Token>,
-    pub associated_token_program:Program<'info,associated_token::AssociatedToken>,
-    pub rent:Sysvar<'info,Rent>
-}
-
-
-#[derive(Accounts)]
-#[instruction()]
-pub struct TransferSplToken<'info> {
-    #[account(mut)]
-    pub mint_token:Account<'info, token::Mint>,
-    #[account(mut)]
-    pub from_account: Account<'info, token::TokenAccount>,
-    #[account(mut)]
-    pub to_account: Account<'info, token::TokenAccount>,
-    #[account(mut)]
-    pub signer: Signer<'info>,
-    pub system_program:Program<'info, System>,
-    pub token_program:Program<'info, token::Token>,
-    pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
-}
 
