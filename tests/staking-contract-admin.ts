@@ -160,7 +160,6 @@ describe("staking-contract", () => {
       TO_ADDRESS,
       amount,
       programStandard,
-      provider.wallet
     )
     console.log("Tx =>", tx)
 
