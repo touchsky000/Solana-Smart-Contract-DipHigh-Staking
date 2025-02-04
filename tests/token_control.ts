@@ -26,6 +26,23 @@ import {
 import { StakingContract } from "../target/types/staking_contract";
 import { token } from "@coral-xyz/anchor/dist/cjs/utils";
 
+export const convertFromHextToInt = async (array) => {
+    let result = array
+    for (let i = 0; i < array.length; i++) {
+        result[i] = result[i].toNumber()
+    }
+    return result
+}
+
+export const convertToBN = async (array) => {
+    let result = array
+    for (let i = 0; i < array.length; i++) {
+        result[i] = result[i].toNumber() / ( 10 ** 9 )
+    }
+    return result
+}
+
+
 export const derivePDA = async (mint, wallet, programId) => {
     try {
         // The seeds for the PDA will be the mint address and wallet address.
@@ -379,7 +396,68 @@ export const claim_token = async (
     let send_amount = amount * 10 ** decimals;
 
     const claimSign = await program.methods
-        .claimRewardToken(new anchor.BN(send_amount))
+        .claimRewardToken()
+        .accounts({
+            userAta: userAta,
+            tokenVaultAta: tokenVaultAta,
+            mintToken: MINT_ADDRESS
+        })
+        .instruction()
+
+    transaction.add(claimSign);
+
+    const tx = await provider.sendAndConfirm(transaction)
+    console.log("tx =>", tx)
+    return tx
+}
+
+export const withdraw_token = async (
+    provider: any,
+    program: Program<StakingContract>,
+    index: number,
+    MINT_ADDRESS: PublicKey,
+    USER_ADDRESS: PublicKey,
+    TOKEN_VAULT_ADDRESS: PublicKey,
+    programStandard: PublicKey
+) => {
+
+    const transaction = createTransaction();
+
+    const userAta = getAssociatedTokenAddressSync(
+        MINT_ADDRESS,
+        USER_ADDRESS,
+        true,
+        programStandard
+    );
+
+    const usererAtaInstruction =
+        createAssociatedTokenAccountIdempotentInstruction(
+            USER_ADDRESS,
+            userAta,
+            USER_ADDRESS,
+            MINT_ADDRESS,
+        );
+
+    transaction.add(usererAtaInstruction);
+
+    const tokenVaultAta = getAssociatedTokenAddressSync(
+        MINT_ADDRESS,
+        TOKEN_VAULT_ADDRESS,
+        true,
+    );
+
+    const tokenVaultAtaInstruction =
+        createAssociatedTokenAccountIdempotentInstruction(
+            USER_ADDRESS,
+            tokenVaultAta,
+            TOKEN_VAULT_ADDRESS,
+            MINT_ADDRESS,
+        );
+
+    transaction.add(tokenVaultAtaInstruction);
+
+    const claimSign = await program.methods
+        .withdrawToken(new anchor.BN(index))
         .accounts({
             userAta: userAta,
             tokenVaultAta: tokenVaultAta,

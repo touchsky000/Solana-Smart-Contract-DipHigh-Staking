@@ -19,6 +19,18 @@ pub struct AdminManager{
     pub bump: u8,
 }
 
+#[account]
+#[derive(InitSpace)]
+pub struct UserHistory{
+    #[max_len(400)]
+    pub staking_amount: Vec<u64>,
+    #[max_len(400)]
+    pub staking_start: Vec<u64>,
+    #[max_len(400)]
+    pub staking_end: Vec<u64>,
+    pub bump :u8
+}
+
 #[derive(Accounts)]
 #[instruction()]
 pub struct CreateToken<'info> {
@@ -80,6 +92,14 @@ pub struct DepositeTokenPda<'info> {
         bump = user_info_maker.bump, 
     )]
     pub user_info_maker: Account<'info, UserInfoMaker>,
+
+    #[account(
+        mut,
+        seeds = [b"user_history", mint_token.key().as_ref() ,signer.key().as_ref()],
+        bump = user_history.bump
+    )]
+    pub user_history: Account<'info, UserHistory>,
+
     pub token_program:Program<'info, token::Token>,
 }
 
@@ -101,6 +121,52 @@ pub struct ClaimTokenPda<'info> {
         bump = user_info_maker.bump, 
     )]
     pub user_info_maker: Account<'info, UserInfoMaker>,
+
+    #[account(
+        mut,
+        seeds = [b"user_history", mint_token.key().as_ref() ,signer.key().as_ref()],
+        bump = user_history.bump
+    )]
+    pub user_history: Account<'info, UserHistory>,
+    
+    ///CHECK:
+    #[account(
+        mut,
+        seeds = [b"token_vault".as_ref()],
+        bump
+    )]
+    pub token_vault: AccountInfo<'info>,
+    
+    pub system_program:Program<'info, System>,
+    pub token_program:Program<'info, token::Token>,
+    pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
+}
+
+#[derive(Accounts)]
+#[instruction()]
+pub struct WithDrawToken<'info> {
+    #[account(mut)]
+    pub mint_token: Account<'info, token::Mint>,
+    #[account(mut)]
+    pub user_ata: Account<'info, token::TokenAccount>,
+    #[account(mut)]
+    pub token_vault_ata: Account<'info, token::TokenAccount>,
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [b"user_info_maker".as_ref(), mint_token.key().as_ref()], // optional seeds for pda
+        bump = user_info_maker.bump, 
+    )]
+    pub user_info_maker: Account<'info, UserInfoMaker>,
+
+    #[account(
+        mut,
+        seeds = [b"user_history", mint_token.key().as_ref() ,signer.key().as_ref()],
+        bump = user_history.bump
+    )]
+    pub user_history: Account<'info, UserHistory>,
+
     ///CHECK:
     #[account(
         mut,

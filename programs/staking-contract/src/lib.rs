@@ -3,7 +3,7 @@ use anchor_spl::token;
 use anchor_lang::prelude::*;
 mod instructions;
 
-declare_id!("74qAdjGYSyNasU4LPADN6t8kRJtXGRuq4UJk5DJEQAfQ");
+declare_id!("8DSoM8roGyCQyTmJEMXmLH5qJiwqey9MGMbj9Kk1x9GR");
 
 #[program]
 pub mod staking_contract {
@@ -14,31 +14,58 @@ pub mod staking_contract {
         user_info_maker.bump = ctx.bumps.user_info_maker;
         Ok(())
     }
-
+    
     pub fn create_token(ctx: Context<CreateToken>, decimals: u8, amount: u64) -> Result<()> {
         let _ = instructions::token_mint(ctx, decimals, amount);
         Ok(())
     }
-
+    
     pub fn token_transfer(ctx: Context<TransferSplToken>, amount: u64) -> Result<()> {
         let _ = instructions::token_transfer(ctx, amount);
         Ok(())
     }
-
+    
     pub fn deposite_token(ctx:Context<DepositeTokenPda>, amount: u64) -> Result<()> {
         let _ = instructions::deposite_token_pda(ctx , amount);
         Ok(())
     }
-
-    pub fn claim_reward_token(ctx:Context<ClaimTokenPda>, amount: u64) -> Result<()> {
-        let _ = instructions::claim_token_pda(ctx, amount);
+    
+    pub fn claim_reward_token(ctx:Context<ClaimTokenPda>) -> Result<()> {
+        let _ = instructions::claim_reward(ctx);
         Ok(())
     }
 
+    pub fn withdraw_token(ctx:Context<WithDrawToken>, index: u64) -> Result<()> {
+        let _ = instructions::withdraw_token(ctx, index);
+        Ok(())
+    }
+    
     pub fn test(ctx: Context<Test>) -> Result<()> {
         Ok(())
     }
+    
+    pub fn initialize_user_history(ctx: Context<InitializeUserHistory>) -> Result<()> {
+        let user_history = &mut ctx.accounts.user_history;
+        user_history.bump = ctx.bumps.user_history;
+        Ok(())
+    }
+}
 
+#[derive(Accounts)]
+pub struct InitializeUserHistory<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
+    #[account(mut)]
+    pub mint_token: Account<'info, token::Mint>,
+    #[account(
+        init,
+        seeds = [b"user_history", mint_token.key().as_ref() ,user.key().as_ref()],
+        bump,
+        payer = user,
+        space = 100 + 3 * 8 * 400,
+    )]
+    pub user_history: Account<'info, UserHistory>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
