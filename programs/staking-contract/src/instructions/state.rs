@@ -5,19 +5,17 @@ use anchor_spl::{
     associated_token
 };
 
-
 #[account]
 #[derive(InitSpace)]
 pub struct UserInfoMaker{
     pub amount: u64,
-    pub bump: u8,
-    
+    pub bump: u8
 }
 
 #[account]
 #[derive(InitSpace)]
 pub struct AdminManager{
-    pub total_supply: u64,
+    pub totalSupply: u64,
     pub bump: u8,
 }
 
@@ -58,8 +56,10 @@ pub struct TransferSplToken<'info> {
 #[derive(Accounts)]
 #[instruction(amount: u64)]
 pub struct DepositeTokenPda<'info> {
+
     #[account(mut)]
     pub mint_token: Account<'info, token::Mint>,
+    
     #[account(mut)]
     pub user_ata: Account<'info, token::TokenAccount>,
     ///CHECK:
@@ -76,18 +76,10 @@ pub struct DepositeTokenPda<'info> {
     
     #[account(
         mut,
-        seeds = [b"user_info_maker".as_ref(), mint_token.key().as_ref(), signer.key().as_ref()], // optional seeds for pda
+        seeds = [b"user_info_maker".as_ref(), mint_token.key().as_ref()], // optional seeds for pda
         bump = user_info_maker.bump, 
     )]
     pub user_info_maker: Account<'info, UserInfoMaker>,
-
-    #[account(
-        mut,
-        seeds = [b"admin_manager".as_ref(), mint_token.key().as_ref()],
-        bump,
-    )]
-    pub admin_manager: Account<'info, AdminManager>,
-
     pub token_program:Program<'info, token::Token>,
 }
 
@@ -105,7 +97,7 @@ pub struct ClaimTokenPda<'info> {
     pub signer: Signer<'info>,
     #[account(
         mut,
-        seeds = [b"user_info_maker".as_ref(), mint_token.key().as_ref(), signer.key().as_ref()], // optional seeds for pda
+        seeds = [b"user_info_maker".as_ref(), mint_token.key().as_ref()], // optional seeds for pda
         bump = user_info_maker.bump, 
     )]
     pub user_info_maker: Account<'info, UserInfoMaker>,
@@ -116,12 +108,6 @@ pub struct ClaimTokenPda<'info> {
         bump
     )]
     pub token_vault: AccountInfo<'info>,
-    #[account(
-        mut,
-        seeds = [b"admin_manager".as_ref(), mint_token.key().as_ref()],
-        bump,
-    )]
-    pub admin_manager: Account<'info, AdminManager>,
     
     pub system_program:Program<'info, System>,
     pub token_program:Program<'info, token::Token>,

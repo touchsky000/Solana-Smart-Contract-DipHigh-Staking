@@ -6,8 +6,6 @@ use crate::state::*;
 
 pub fn deposite_token_pda(ctx:Context<DepositeTokenPda>, amount: u64) -> Result<()>{
     let user_info_maker = &mut ctx.accounts.user_info_maker;
-    let admin_manager = &mut ctx.accounts.admin_manager;
-
 
     let seeds = &[b"token_vault".as_ref(), &[ctx.bumps.token_vault]];
     let signer_seeds =&[&seeds[..]];
@@ -30,17 +28,14 @@ pub fn deposite_token_pda(ctx:Context<DepositeTokenPda>, amount: u64) -> Result<
     )?;
 
     user_info_maker.amount = user_info_maker.amount + amount;
-    admin_manager.total_supply = admin_manager.total_supply + amount;
+
     Ok(())
 }
 
 pub fn claim_token_pda(ctx:Context<ClaimTokenPda>, amount: u64) -> Result<()>{
-    let admin_manager = &mut ctx.accounts.admin_manager;
     let user_info_maker = &mut ctx.accounts.user_info_maker;
     // let clock = Clock::get()?;
-    
-    // let clock = Clock::get()?;
-    
+
     let seeds = &[b"token_vault".as_ref(), &[ctx.bumps.token_vault]];
     let signer_seeds = &[&seeds[..]];
 
@@ -62,8 +57,7 @@ pub fn claim_token_pda(ctx:Context<ClaimTokenPda>, amount: u64) -> Result<()>{
 
     user_info_maker.amount = user_info_maker.amount - amount;
 
-
-    user_info_maker.amount = user_info_maker.amount - amount;
-    admin_manager.total_supply = admin_manager.total_supply - amount;
     Ok(())
 }
+
+

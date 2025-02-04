@@ -5,7 +5,7 @@ seeds = true
 skip-lint = false
 
 [programs.localnet]
-staking_contract = "FWfrusXDkPic4BLgfaxUD7foz3cRK4WjswYKLBwvA4RR"
+staking_contract = "74qAdjGYSyNasU4LPADN6t8kRJtXGRuq4UJk5DJEQAfQ"
 
 [registry]
 url = "https://api.apr.dev"

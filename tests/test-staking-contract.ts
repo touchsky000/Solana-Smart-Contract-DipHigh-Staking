@@ -83,26 +83,26 @@ import {
 //     )
 //   })
 
-//   it("Is pda acc initialized!", async () => {
-//     const [userInfoPDA] = PublicKey.findProgramAddressSync(
-//       [Buffer.from("user_info_maker")],
-//       program.programId
-//     )
-//     try {
-//       const txSig = await program.methods
-//         .initialize()
-//         .accounts({
-//           userInfoMaker: userInfoPDA,
-//         })
-//         .rpc();
-//       const accountData = await program.account.userInfoMaker.fetch(userInfoPDA);
-//       // console.log(`Transaction Signature: ${txSig}`);
-//       // console.log(`amount: ${accountData.amount}`);
-//     } catch (error) {
-//       // If PDA Account already created, then we expect an error
-//       // console.log("already initialized")
-//     }
-//   });
+//   // it("Is pda acc initialized!", async () => {
+//   //   const [userInfoPDA] = PublicKey.findProgramAddressSync(
+//   //     [Buffer.from("user_info_maker")],
+//   //     program.programId
+//   //   )
+//   //   try {
+//   //     const txSig = await program.methods
+//   //       .initialize()
+//   //       .accounts({
+//   //         userInfoMaker: userInfoPDA,
+//   //       })
+//   //       .rpc();
+//   //     const accountData = await program.account.userInfoMaker.fetch(userInfoPDA);
+//   //     // console.log(`Transaction Signature: ${txSig}`);
+//   //     // console.log(`amount: ${accountData.amount}`);
+//   //   } catch (error) {
+//   //     // If PDA Account already created, then we expect an error
+//   //     // console.log("already initialized")
+//   //   }
+//   // });
 
 //   it("Create Token", async () => {
 //     const decimal = 9
@@ -203,6 +203,8 @@ import {
 //   })
 // });
 
+
+
 describe("test staking-contract with user1", async () => {
   const user1 = Keypair.fromSecretKey(Uint8Array.from(require('./us1hbhq71B8B865ARa3NkYfKn8fwn771bgMZdCdzyiy.json')))
   const user2 = Keypair.fromSecretKey(Uint8Array.from(require('./us2P2tY6Tf8T5cacUJ8NzmA6mmxS2bDh7onftgGJaty.json')))
@@ -211,9 +213,7 @@ describe("test staking-contract with user1", async () => {
   console.log("user1 =>", user1.publicKey.toBase58())
   console.log("user2 =>", user2.publicKey.toBase58())
   console.log("user3 =>", user3.publicKey.toBase58())
-  const token_vault_seed = "token_vault"
-  const admin_manager_seed = "admin_manager"
-  const user_info_seed = "user_info_maker"
+
   const adminProvider = anchor.AnchorProvider.env()
   const user1Provider = new anchor.AnchorProvider(
     adminProvider.connection, // You can use the same connection
@@ -231,7 +231,7 @@ describe("test staking-contract with user1", async () => {
     adminProvider.opts
   )
 
-  const provider = user1Provider
+  const provider = adminProvider
   anchor.setProvider(provider)
 
   const program = anchor.workspace.StakingContract as Program<StakingContract>;
@@ -242,85 +242,20 @@ describe("test staking-contract with user1", async () => {
   );
 
   it("initialize", async () => {
-    const [adminManagePda] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from(admin_manager_seed),
-        mintToken.publicKey.toBuffer()
-      ],
-      program.programId
-    )
-
-    const [userInfoPda] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from(user_info_seed),
-        mintToken.publicKey.toBuffer(),
-        provider.wallet.publicKey.toBuffer()
-      ],
-      program.programId
-    )
-
-    const tx = await program.methods.initialize()
-      .accounts({
-        userInfoMaker: userInfoPda,
-        adminManager: adminManagePda,
-        mintToken: mintToken.publicKey
-      })
-      .rpc()
-  })
-
-  // it("Transfer Token from user1 to user2", async () => {
-
-  //   const provider = user1Provider
-
-  //   const amount = 10
-  //   const programStandard = TOKEN_PROGRAM_ID;
-  //   const MINT_ADDRESS = mintToken.publicKey
-  //   const FROM_ADDRESS = provider.wallet.publicKey
-  //   const TO_ADDRESS = user2.publicKey
-  //   const tx = await transfer_token_user_to_user(
-  //     provider,
-  //     program,
-  //     MINT_ADDRESS,
-  //     FROM_ADDRESS,
-  //     TO_ADDRESS,
-  //     amount,
-  //     programStandard
-  //   )
-  // })
-
-  it("get pda info", async () => {
     const [userInfoPDA] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("user_info_maker"),
-        mintToken.publicKey.toBuffer(),
-        provider.wallet.publicKey.toBuffer()
-      ],
+      [Buffer.from("user_info_maker"), mintToken.publicKey.toBuffer()],
       program.programId
     )
-    console.log("useInfo Pda =>", userInfoPDA.toBase58())
 
-    const [adminManagerPda] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("admin_manager"),
-        mintToken.publicKey.toBuffer(),
-      ],
-      program.programId
-    )
-    console.log("admin Pda =>", adminManagerPda.toBase58())
-    // const accountData = await program.account.userInfoMaker.fetch(
-    //   userInfoPDA
-    // )
-    // console.log("Amount =>", accountData.amount.toNumber() / (10 ** 9))
-  })
+    try {
+      const tx = await program.methods.initialize()
+        .accounts({
+          mintToken: mintToken.publicKey,
+        })
+        .rpc()
+    } catch (err) {
 
-  it("Pda from contract =>", async () => {
-    const tx = await program.methods.test()
-    .accounts({
-      mintToken: mintToken.publicKey
-    })
-    .rpc()
-
-    console.log("tx: ", tx)
+    }
   })
 
   it("Deposite token in contract", async () => {
@@ -338,8 +273,18 @@ describe("test staking-contract with user1", async () => {
       amount,
       programStandard
     )
-    console.log("tx =>", tx)
 
+    const [userInfoPDA] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("user_info_maker"),
+        mintToken.publicKey.toBuffer()
+      ],
+      program.programId
+    )
+    const accountData = await program.account.userInfoMaker.fetch(
+      userInfoPDA
+    )
+    console.log("Amount =>", accountData.amount.toNumber() / (10 ** 9))
   })
 
   it("Claim token in PDA", async () => {
@@ -361,16 +306,13 @@ describe("test staking-contract with user1", async () => {
     const [userInfoPDA] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("user_info_maker"),
-        mintToken.publicKey.toBuffer(),
-        provider.wallet.publicKey.toBuffer()
+        mintToken.publicKey.toBuffer()
       ],
       program.programId
     )
-
     const accountData = await program.account.userInfoMaker.fetch(
       userInfoPDA
     )
-
     console.log("Amount =>", accountData.amount.toNumber() / (10 ** 9))
   })
 })

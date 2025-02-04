@@ -5,7 +5,6 @@ use anchor_spl::{
 };
 use anchor_lang::system_program;
 use crate::state::*;
-// use crate::seeds::*;
 
 pub fn token_mint(ctx:Context<CreateToken>, decimals: u8, amount: u64) -> Result<()>{
     let cpi_system_program = ctx.accounts.system_program.to_account_info();
