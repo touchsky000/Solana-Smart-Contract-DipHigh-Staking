@@ -1,8 +1,11 @@
 use crate::instructions::*;
 use anchor_lang::prelude::*;
+use anchor_spl::{
+    token,
+};
 mod instructions;
 
-declare_id!("DdxfS4eSxRLZ8FuY5zVgwmDS28Ydn9pAoxK5jGtZTzBJ");
+declare_id!("FWfrusXDkPic4BLgfaxUD7foz3cRK4WjswYKLBwvA4RR");
 
 #[program]
 pub mod staking_contract {
@@ -34,21 +37,49 @@ pub mod staking_contract {
         Ok(())
     }
 
+    pub fn test(ctx:Context<Test>) -> Result<()>{
+        let (expected_pda, _) = Pubkey::find_program_address(
+            &[
+                b"admin_manager", 
+                ctx.accounts.mint_token.key().as_ref()
+            ], 
+            ctx.program_id);
+        msg!("Expected PDA: {}", expected_pda);
+        Ok(())
+    }
 }
 
+#[derive(Accounts)]
+pub struct Test<'info>{
+    #[account(mut)]
+    pub user:Signer<'info>,
+    #[account(mut)]
+    pub mint_token: Account<'info, token::Mint>,
+}
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(mut)]
     pub user:Signer<'info>,
+    #[account(mut)]
+    pub mint_token: Account<'info, token::Mint>,
     #[account(
         init,
-        seeds = [b"user_info_maker"],
+        seeds = [b"user_info_maker".as_ref(), mint_token.key().as_ref(), user.key().as_ref()],
         bump,
         payer = user,
         space = 8 + UserInfoMaker::INIT_SPACE
     )]
     pub user_info_maker: Account<'info, UserInfoMaker>,
+
+    #[account(
+        init,
+        seeds = [b"admin_manager".as_ref(), mint_token.key().as_ref()],
+        bump,
+        payer = user,
+        space = 8 + AdminManager::INIT_SPACE
+    )]
+    pub admin_manager: Account<'info, AdminManager>,
     ///CHECK:
     #[account(
         init,

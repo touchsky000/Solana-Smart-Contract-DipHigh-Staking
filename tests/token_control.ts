@@ -316,7 +316,8 @@ export const stake_token = async (
             .depositeToken(new anchor.BN(send_amount))
             .accounts({
                 userAta: userAta,
-                tokenVaultAta: tokenVaultAta
+                tokenVaultAta: tokenVaultAta,
+                mintToken: MINT_ADDRESS
             })
             .instruction()
     );
@@ -381,7 +382,8 @@ export const claim_token = async (
         .claimRewardToken(new anchor.BN(send_amount))
         .accounts({
             userAta: userAta,
-            tokenVaultAta: tokenVaultAta
+            tokenVaultAta: tokenVaultAta,
+            mintToken: MINT_ADDRESS
         })
         .instruction()
 
