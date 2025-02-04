@@ -40,7 +40,6 @@ pub fn deposite_token_pda(ctx:Context<DepositeTokenPda>, amount: u64) -> Result<
 
 pub fn claim_reward(ctx:Context<ClaimTokenPda>) -> Result<()>{
     let user_info_maker = &mut ctx.accounts.user_info_maker;
-    let current_timestamp = Clock::get().unwrap().unix_timestamp;
 
     let seeds = &[b"token_vault".as_ref(), &[ctx.bumps.token_vault]];
     let signer_seeds = &[&seeds[..]];
@@ -72,7 +71,10 @@ pub fn withdraw_token(ctx:Context<WithDrawToken>, index: u64) -> Result<()>{
     let user_info_maker = &mut ctx.accounts.user_info_maker;
     let user_history = &mut ctx.accounts.user_history;
     let current_timestamp = Clock::get().unwrap().unix_timestamp;
-
+    if !is_unlock(user_history.staking_start[index as usize], current_timestamp.try_into().unwrap()){
+        msg!("unlock time");
+        return Ok(())
+    }
     if user_history.staking_end[index as usize] == 0 {
         let seeds = &[b"token_vault".as_ref(), &[ctx.bumps.token_vault]];
         let signer_seeds = &[&seeds[..]];

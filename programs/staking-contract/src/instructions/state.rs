@@ -15,7 +15,7 @@ pub struct UserInfoMaker{
 #[account]
 #[derive(InitSpace)]
 pub struct AdminManager{
-    pub totalSupply: u64,
+    pub total_supply: u64,
     pub bump: u8,
 }
 

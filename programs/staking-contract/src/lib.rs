@@ -40,7 +40,7 @@ pub mod staking_contract {
         Ok(())
     }
     
-    pub fn test(ctx: Context<Test>) -> Result<()> {
+    pub fn test(_ctx: Context<Test>) -> Result<()> {
         Ok(())
     }
     
