@@ -1,7 +1,7 @@
 const LOCK_TIME: u64 = 100; // day
-
+const DECIMAL: u64 = 6;
 pub fn to_bn (number: u64) -> u64 {
-    number.saturating_mul(10_u64.pow(9))
+    number.saturating_mul(10_u64.pow(DECIMAL.try_into().unwrap()))
 }
 
 pub fn is_unlock(start_stamp: u64, current_stamp: u64) -> bool {

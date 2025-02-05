@@ -5,14 +5,14 @@ seeds = true
 skip-lint = false
 
 [programs.localnet]
-staking_contract = "8DSoM8roGyCQyTmJEMXmLH5qJiwqey9MGMbj9Kk1x9GR"
+staking_contract = "Aw7gsrwSAE6H2UxXjXzZcyhwPPr2G4NCPH6My1CtSWX"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "localnet"
 wallet = "/home/whitehorse/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/test-staking-contract.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/staking-contract-admin.ts"

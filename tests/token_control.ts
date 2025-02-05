@@ -153,7 +153,6 @@ export const transfer_token = async (
         MINT_ADDRESS,
         FROM_ADDRESS,
         false,
-        programStandard
     );
 
     const senderAtaInstruction =
@@ -162,7 +161,6 @@ export const transfer_token = async (
             senderAta,
             FROM_ADDRESS,
             MINT_ADDRESS,
-            programStandard
         );
 
     transaction.add(senderAtaInstruction);
@@ -171,7 +169,6 @@ export const transfer_token = async (
         MINT_ADDRESS,
         TO_ADDRESS,
         false,
-        programStandard
     );
 
     const recipientAtaInstruction =
@@ -180,16 +177,12 @@ export const transfer_token = async (
             receiverAta,
             TO_ADDRESS,
             MINT_ADDRESS,
-            programStandard
         );
 
     transaction.add(recipientAtaInstruction);
 
     const mint = await provider.connection.getTokenSupply(MINT_ADDRESS);
     const decimals = mint.value.decimals;
-    // Fix: Ensure proper BN calculation
-    const multiplier = new BN(10).pow(new BN(decimals));
-    // const sendAmount = new BN(SEND_AMOUNT).mul(multiplier);
     let send_amount = amount * 10 ** decimals;
 
     transaction.add(
@@ -199,7 +192,6 @@ export const transfer_token = async (
                 mintToken: MINT_ADDRESS,
                 fromAccount: senderAta,
                 toAccount: receiverAta,
-                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID
             })
             .instruction()
     );
@@ -256,9 +248,6 @@ export const transfer_token_user_to_user = async (
 
     const mint = await provider.connection.getTokenSupply(MINT_ADDRESS);
     const decimals = mint.value.decimals;
-    // Fix: Ensure proper BN calculation
-    const multiplier = new BN(10).pow(new BN(decimals));
-    // const sendAmount = new BN(SEND_AMOUNT).mul(multiplier);
     let send_amount = amount * 10 ** decimals;
 
     transaction.add(
@@ -268,7 +257,6 @@ export const transfer_token_user_to_user = async (
                 mintToken: MINT_ADDRESS,
                 fromAccount: senderAta,
                 toAccount: receiverAta,
-                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID
             })
             .instruction()
     );
@@ -323,9 +311,6 @@ export const stake_token = async (
 
     const mint = await provider.connection.getTokenSupply(MINT_ADDRESS);
     const decimals = mint.value.decimals;
-    // Fix: Ensure proper BN calculation
-    const multiplier = new BN(10).pow(new BN(decimals));
-    // const sendAmount = new BN(SEND_AMOUNT).mul(multiplier);
     let send_amount = amount * 10 ** decimals;
 
     transaction.add(
@@ -390,10 +375,6 @@ export const claim_token = async (
 
     const mint = await provider.connection.getTokenSupply(MINT_ADDRESS);
     const decimals = mint.value.decimals;
-    // Fix: Ensure proper BN calculation
-    const multiplier = new BN(10).pow(new BN(decimals));
-    // const sendAmount = new BN(SEND_AMOUNT).mul(multiplier);
-    let send_amount = amount * 10 ** decimals;
 
     const claimSign = await program.methods
         .claimRewardToken()
