@@ -66,7 +66,7 @@ pub struct TransferSplToken<'info> {
 
 
 #[derive(Accounts)]
-#[instruction(amount: u64)]
+#[instruction()]
 pub struct DepositeTokenPda<'info> {
 
     #[account(mut)]
@@ -87,19 +87,23 @@ pub struct DepositeTokenPda<'info> {
     pub signer: Signer<'info>,
     
     #[account(
-        mut,
+        init_if_needed,
+        payer = signer,
+        space = 8 + UserInfoMaker::INIT_SPACE,
         seeds = [b"user_info_maker".as_ref(), mint_token.key().as_ref()], // optional seeds for pda
-        bump = user_info_maker.bump, 
+        bump, 
     )]
     pub user_info_maker: Account<'info, UserInfoMaker>,
 
     #[account(
-        mut,
+        init_if_needed,
+        payer = signer,
+        space = 8 * 100,
         seeds = [b"user_history", mint_token.key().as_ref() ,signer.key().as_ref()],
-        bump = user_history.bump
+        bump
     )]
     pub user_history: Account<'info, UserHistory>,
-
+    pub system_program:Program<'info, System>,
     pub token_program:Program<'info, token::Token>,
 }
 
@@ -116,16 +120,20 @@ pub struct ClaimTokenPda<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
-        mut,
+        init_if_needed,
+        payer = signer,
+        space = 8 + UserInfoMaker::INIT_SPACE,
         seeds = [b"user_info_maker".as_ref(), mint_token.key().as_ref()], // optional seeds for pda
-        bump = user_info_maker.bump, 
+        bump, 
     )]
     pub user_info_maker: Account<'info, UserInfoMaker>,
 
     #[account(
-        mut,
+        init_if_needed,
+        payer = signer,
+        space = 8 * 100,
         seeds = [b"user_history", mint_token.key().as_ref() ,signer.key().as_ref()],
-        bump = user_history.bump
+        bump
     )]
     pub user_history: Account<'info, UserHistory>,
     
@@ -154,16 +162,20 @@ pub struct WithDrawToken<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
-        mut,
+        init_if_needed,
+        payer = signer,
+        space = 8 + UserInfoMaker::INIT_SPACE,
         seeds = [b"user_info_maker".as_ref(), mint_token.key().as_ref()], // optional seeds for pda
-        bump = user_info_maker.bump, 
+        bump, 
     )]
     pub user_info_maker: Account<'info, UserInfoMaker>,
 
     #[account(
-        mut,
+        init_if_needed,
+        payer = signer,
+        space = 8 * 100,
         seeds = [b"user_history", mint_token.key().as_ref() ,signer.key().as_ref()],
-        bump = user_history.bump
+        bump,
     )]
     pub user_history: Account<'info, UserHistory>,
 
@@ -178,4 +190,18 @@ pub struct WithDrawToken<'info> {
     pub system_program:Program<'info, System>,
     pub token_program:Program<'info, token::Token>,
     pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
+}
+
+#[error_code]
+pub enum StakingError {
+    #[msg("Unauthorized")]
+    Unauthorized,
+    #[msg("Active vesting period exists")]
+    ActiveVestingExists,
+    #[msg("Allocation amount too large")]
+    AllocationAmountTooLarge,
+    #[msg("Sale not started")]
+    SaleNotStarted,
+    #[msg("Sale not ended")]
+    SaleNotEnded,
 }

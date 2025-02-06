@@ -295,7 +295,6 @@ export const stake_token = async (
         MINT_ADDRESS,
         TOKEN_VAULT_ADDRESS,
         true,
-        programStandard
     );
 
     const tokenVaultAtaInstruction =
@@ -304,7 +303,6 @@ export const stake_token = async (
             tokenVaultAta,
             TOKEN_VAULT_ADDRESS,
             MINT_ADDRESS,
-            programStandard
         );
 
     transaction.add(tokenVaultAtaInstruction);
