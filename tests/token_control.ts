@@ -447,7 +447,6 @@ export const withdraw_token = async (
     transaction.add(claimSign);
 
     const tx = await provider.sendAndConfirm(transaction)
-    console.log("tx =>", tx)
     return tx
 }
 

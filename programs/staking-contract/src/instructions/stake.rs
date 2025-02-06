@@ -72,10 +72,9 @@ pub fn withdraw_token(ctx:Context<WithDrawToken>, index: u64) -> Result<()>{
     let current_timestamp = Clock::get().unwrap().unix_timestamp;
 
     require!( is_unlock(user_history.staking_start[index as usize], current_timestamp.try_into().unwrap()) ,
-            StakingError::Unauthorized
+            StakingError::TokenLocked
     );
 
-    msg!("passed");
     if user_history.staking_end[index as usize] == 0 {
         let seeds = &[b"token_vault".as_ref(), &[ctx.bumps.token_vault]];
         let signer_seeds = &[&seeds[..]];
@@ -106,5 +105,6 @@ pub fn withdraw_token(ctx:Context<WithDrawToken>, index: u64) -> Result<()>{
         Ok(())
     }
 }
+
 
 

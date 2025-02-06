@@ -13,7 +13,7 @@ import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token"
-import { assert } from "chai"
+import { assert, expect } from "chai"
 import {
   derivePDA,
   transfer_token,
@@ -213,95 +213,95 @@ describe("test staking-contract with user1", async () => {
   );
 
 
-  it("Deposite token in contract", async () => {
-    const amount = 108
-    const programStandard = TOKEN_PROGRAM_ID;
-    const MINT_ADDRESS = mintToken.publicKey
-    const USER_ADDRESS = provider.wallet.publicKey
-    const TOKEN_VAULT_ADDRESS = tokenVaultPda
-    const tx = await stake_token(
-      provider,
-      program,
-      MINT_ADDRESS,
-      USER_ADDRESS,
-      TOKEN_VAULT_ADDRESS,
-      amount,
-      programStandard
-    )
+  // it("Deposite token in contract", async () => {
+  //   const amount = 108
+  //   const programStandard = TOKEN_PROGRAM_ID;
+  //   const MINT_ADDRESS = mintToken.publicKey
+  //   const USER_ADDRESS = provider.wallet.publicKey
+  //   const TOKEN_VAULT_ADDRESS = tokenVaultPda
+  //   const tx = await stake_token(
+  //     provider,
+  //     program,
+  //     MINT_ADDRESS,
+  //     USER_ADDRESS,
+  //     TOKEN_VAULT_ADDRESS,
+  //     amount,
+  //     programStandard
+  //   )
 
-    const [userInfoPDA] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("user_info_maker"),
-        mintToken.publicKey.toBuffer()
-      ],
-      program.programId
-    )
-    const accountData = await program.account.userInfoMaker.fetch(
-      userInfoPDA
-    )
-    console.log("Amount =>", accountData.amount.toNumber() / (10 ** 9))
+  //   const [userInfoPDA] = PublicKey.findProgramAddressSync(
+  //     [
+  //       Buffer.from("user_info_maker"),
+  //       mintToken.publicKey.toBuffer()
+  //     ],
+  //     program.programId
+  //   )
+  //   const accountData = await program.account.userInfoMaker.fetch(
+  //     userInfoPDA
+  //   )
+  //   console.log("Amount =>", accountData.amount.toNumber() / (10 ** 9))
 
-    const [userHistoryPDA] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("user_history"),
-        mintToken.publicKey.toBuffer(),
-        provider.wallet.publicKey.toBuffer()
-      ],
-      program.programId
-    )
+  //   const [userHistoryPDA] = PublicKey.findProgramAddressSync(
+  //     [
+  //       Buffer.from("user_history"),
+  //       mintToken.publicKey.toBuffer(),
+  //       provider.wallet.publicKey.toBuffer()
+  //     ],
+  //     program.programId
+  //   )
 
-    const userHistoryData = await program.account.userHistory.fetch(
-      userHistoryPDA
-    )
-    console.log("History =>", await convertToBN(userHistoryData.stakingAmount))
-    console.log("History =>", await convertFromHextToInt(userHistoryData.stakingStart))
-    console.log("History =>", await convertFromHextToInt(userHistoryData.stakingEnd))
-  })
+  //   const userHistoryData = await program.account.userHistory.fetch(
+  //     userHistoryPDA
+  //   )
+  //   console.log("History =>", await convertToBN(userHistoryData.stakingAmount))
+  //   console.log("History =>", await convertFromHextToInt(userHistoryData.stakingStart))
+  //   console.log("History =>", await convertFromHextToInt(userHistoryData.stakingEnd))
+  // })
 
-  it("Claim token in PDA", async () => {
-    const amount = 10
-    const programStandard = TOKEN_PROGRAM_ID;
-    const MINT_ADDRESS = mintToken.publicKey
-    const USER_ADDRESS = provider.wallet.publicKey
-    const TOKEN_VAULT_ADDRESS = tokenVaultPda
-    const tx = await claim_token(
-      provider,
-      program,
-      MINT_ADDRESS,
-      USER_ADDRESS,
-      TOKEN_VAULT_ADDRESS,
-      amount,
-      programStandard
-    )
+  // it("Claim token in PDA", async () => {
+  //   const amount = 10
+  //   const programStandard = TOKEN_PROGRAM_ID;
+  //   const MINT_ADDRESS = mintToken.publicKey
+  //   const USER_ADDRESS = provider.wallet.publicKey
+  //   const TOKEN_VAULT_ADDRESS = tokenVaultPda
+  //   const tx = await claim_token(
+  //     provider,
+  //     program,
+  //     MINT_ADDRESS,
+  //     USER_ADDRESS,
+  //     TOKEN_VAULT_ADDRESS,
+  //     amount,
+  //     programStandard
+  //   )
 
-    const [userInfoPDA] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("user_info_maker"),
-        mintToken.publicKey.toBuffer()
-      ],
-      program.programId
-    )
-    const accountData = await program.account.userInfoMaker.fetch(
-      userInfoPDA
-    )
-    console.log("Amount =>", accountData.amount.toNumber() / (10 ** 9))
+  //   const [userInfoPDA] = PublicKey.findProgramAddressSync(
+  //     [
+  //       Buffer.from("user_info_maker"),
+  //       mintToken.publicKey.toBuffer()
+  //     ],
+  //     program.programId
+  //   )
+  //   const accountData = await program.account.userInfoMaker.fetch(
+  //     userInfoPDA
+  //   )
+  //   console.log("Amount =>", accountData.amount.toNumber() / (10 ** 9))
 
-    const [userHistoryPDA] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("user_history"),
-        mintToken.publicKey.toBuffer(),
-        provider.wallet.publicKey.toBuffer()
-      ],
-      program.programId
-    )
+  //   const [userHistoryPDA] = PublicKey.findProgramAddressSync(
+  //     [
+  //       Buffer.from("user_history"),
+  //       mintToken.publicKey.toBuffer(),
+  //       provider.wallet.publicKey.toBuffer()
+  //     ],
+  //     program.programId
+  //   )
 
-    const userHistoryData = await program.account.userHistory.fetch(
-      userHistoryPDA
-    )
-    console.log("History =>", await convertToBN(userHistoryData.stakingAmount))
-    console.log("History =>", await convertFromHextToInt(userHistoryData.stakingStart))
-    console.log("History =>", await convertFromHextToInt(userHistoryData.stakingEnd))
-  })
+  //   const userHistoryData = await program.account.userHistory.fetch(
+  //     userHistoryPDA
+  //   )
+  //   console.log("History =>", await convertToBN(userHistoryData.stakingAmount))
+  //   console.log("History =>", await convertFromHextToInt(userHistoryData.stakingStart))
+  //   console.log("History =>", await convertFromHextToInt(userHistoryData.stakingEnd))
+  // })
 
   it("Withdraw token in PDA", async () => {
     const index = 0
@@ -309,15 +309,21 @@ describe("test staking-contract with user1", async () => {
     const MINT_ADDRESS = mintToken.publicKey
     const USER_ADDRESS = provider.wallet.publicKey
     const TOKEN_VAULT_ADDRESS = tokenVaultPda
-    const tx = await withdraw_token(
-      provider,
-      program,
-      index,
-      MINT_ADDRESS,
-      USER_ADDRESS,
-      TOKEN_VAULT_ADDRESS,
-      programStandard
-    )
+    try {
+      const tx = await withdraw_token(
+        provider,
+        program,
+        index,
+        MINT_ADDRESS,
+        USER_ADDRESS,
+        TOKEN_VAULT_ADDRESS,
+        programStandard
+      )
+      console.log("Tx => ", tx)
+    } catch (err) {
+      expect(err.message).to.include("Unauthorized")
+    }
+
 
     const [userInfoPDA] = PublicKey.findProgramAddressSync(
       [

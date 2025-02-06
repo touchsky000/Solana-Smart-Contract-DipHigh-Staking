@@ -16,27 +16,27 @@ pub mod staking_contract {
     }
     
     pub fn create_token(ctx: Context<CreateToken>, decimals: u8, amount: u64) -> Result<()> {
-        let _ = instructions::token_mint(ctx, decimals, amount);
+        let _ = instructions::token_mint(ctx, decimals, amount)?;
         Ok(())
     }
     
     pub fn token_transfer(ctx: Context<TransferSplToken>, amount: u64) -> Result<()> {
-        let _ = instructions::token_transfer(ctx, amount);
+        let _ = instructions::token_transfer(ctx, amount)?;
         Ok(())
     }
     
     pub fn deposite_token(ctx:Context<DepositeTokenPda>, amount: u64) -> Result<()> {
-        let _ = instructions::deposite_token_pda(ctx , amount);
+        let _ = instructions::deposite_token_pda(ctx , amount)?;
         Ok(())
     }
     
     pub fn claim_reward_token(ctx:Context<ClaimTokenPda>) -> Result<()> {
-        let _ = instructions::claim_reward(ctx);
+        let _ = instructions::claim_reward(ctx)?;
         Ok(())
     }
 
     pub fn withdraw_token(ctx:Context<WithDrawToken>, index: u64) -> Result<()> {
-        let _ = instructions::withdraw_token(ctx, index);
+        let _ = instructions::withdraw_token(ctx, index)?;
         Ok(())
     }
     

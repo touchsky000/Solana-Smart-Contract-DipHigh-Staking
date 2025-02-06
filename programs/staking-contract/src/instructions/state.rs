@@ -194,8 +194,8 @@ pub struct WithDrawToken<'info> {
 
 #[error_code]
 pub enum StakingError {
-    #[msg("Unauthorized")]
-    Unauthorized,
+    #[msg("TokenLocked")]
+    TokenLocked,
     #[msg("Active vesting period exists")]
     ActiveVestingExists,
     #[msg("Allocation amount too large")]

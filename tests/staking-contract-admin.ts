@@ -163,36 +163,6 @@ describe("test staking-contract with user1", async () => {
     program.programId,
   );
 
-  // it("initialize", async () => {
-  //   const [userInfoPDA] = PublicKey.findProgramAddressSync(
-  //     [Buffer.from("user_info_maker"), mintToken.publicKey.toBuffer()],
-  //     program.programId
-  //   )
-
-  //   try {
-  //     const tx = await program.methods.initialize()
-  //       .accounts({
-  //         mintToken: mintToken.publicKey,
-  //       })
-  //       .rpc()
-  //   } catch (err) {
-
-  //   }
-  // })
-
-  // it("initizlie user history", async () => {
-  //   try {
-  //     const tx = await program.methods.initializeUserHistory()
-  //       .accounts({
-  //         mintToken: mintToken.publicKey,
-  //         user: provider.wallet.publicKey
-  //       })
-  //       .rpc()
-  //     console.log("tx =>", tx)
-  //   } catch (err) {
-  //     console.log("Err")
-  //   }
-  // })
 
   it("Deposite token in contract", async () => {
     const amount = 108
@@ -284,48 +254,48 @@ describe("test staking-contract with user1", async () => {
     console.log("History =>", await convertFromHextToInt(userHistoryData.stakingEnd))
   })
 
-  // it("Withdraw token in PDA", async () => {
-  //   const index = 0
-  //   const programStandard = TOKEN_PROGRAM_ID;
-  //   const MINT_ADDRESS = mintToken.publicKey
-  //   const USER_ADDRESS = provider.wallet.publicKey
-  //   const TOKEN_VAULT_ADDRESS = tokenVaultPda
-  //   const tx = await withdraw_token(
-  //     provider,
-  //     program,
-  //     index,
-  //     MINT_ADDRESS,
-  //     USER_ADDRESS,
-  //     TOKEN_VAULT_ADDRESS,
-  //     programStandard
-  //   )
+  it("Withdraw token in PDA", async () => {
+    const index = 0
+    const programStandard = TOKEN_PROGRAM_ID;
+    const MINT_ADDRESS = mintToken.publicKey
+    const USER_ADDRESS = provider.wallet.publicKey
+    const TOKEN_VAULT_ADDRESS = tokenVaultPda
+    const tx = await withdraw_token(
+      provider,
+      program,
+      index,
+      MINT_ADDRESS,
+      USER_ADDRESS,
+      TOKEN_VAULT_ADDRESS,
+      programStandard
+    )
 
-  //   const [userInfoPDA] = PublicKey.findProgramAddressSync(
-  //     [
-  //       Buffer.from("user_info_maker"),
-  //       mintToken.publicKey.toBuffer()
-  //     ],
-  //     program.programId
-  //   )
-  //   const accountData = await program.account.userInfoMaker.fetch(
-  //     userInfoPDA
-  //   )
-  //   console.log("Amount =>", accountData.amount.toNumber() / (10 ** decimal))
+    const [userInfoPDA] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("user_info_maker"),
+        mintToken.publicKey.toBuffer()
+      ],
+      program.programId
+    )
+    const accountData = await program.account.userInfoMaker.fetch(
+      userInfoPDA
+    )
+    console.log("Amount =>", accountData.amount.toNumber() / (10 ** decimal))
 
-  //   const [userHistoryPDA] = PublicKey.findProgramAddressSync(
-  //     [
-  //       Buffer.from("user_history"),
-  //       mintToken.publicKey.toBuffer(),
-  //       provider.wallet.publicKey.toBuffer()
-  //     ],
-  //     program.programId
-  //   )
+    const [userHistoryPDA] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("user_history"),
+        mintToken.publicKey.toBuffer(),
+        provider.wallet.publicKey.toBuffer()
+      ],
+      program.programId
+    )
 
-  //   const userHistoryData = await program.account.userHistory.fetch(
-  //     userHistoryPDA
-  //   )
-  //   console.log("History =>", await convertToBN(userHistoryData.stakingAmount))
-  //   console.log("History =>", await convertFromHextToInt(userHistoryData.stakingStart))
-  //   console.log("History =>", await convertFromHextToInt(userHistoryData.stakingEnd))
-  // })
+    const userHistoryData = await program.account.userHistory.fetch(
+      userHistoryPDA
+    )
+    console.log("History =>", await convertToBN(userHistoryData.stakingAmount))
+    console.log("History =>", await convertFromHextToInt(userHistoryData.stakingStart))
+    console.log("History =>", await convertFromHextToInt(userHistoryData.stakingEnd))
+  })
 })
