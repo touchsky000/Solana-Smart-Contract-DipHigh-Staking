@@ -272,9 +272,9 @@ export const stake_token = async (
     USER_ADDRESS: PublicKey,
     TOKEN_VAULT_ADDRESS: PublicKey,
     amount: number,
-    programStandard: PublicKey
 ) => {
     const transaction = createTransaction();
+
     const userAta = getAssociatedTokenAddressSync(
         MINT_ADDRESS,
         USER_ADDRESS,

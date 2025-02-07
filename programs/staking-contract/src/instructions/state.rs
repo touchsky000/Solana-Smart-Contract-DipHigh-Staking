@@ -103,8 +103,8 @@ pub struct DepositeTokenPda<'info> {
         bump
     )]
     pub user_history: Account<'info, UserHistory>,
-    pub system_program:Program<'info, System>,
     pub token_program:Program<'info, token::Token>,
+    pub system_program:Program<'info, System>,
 }
 
 

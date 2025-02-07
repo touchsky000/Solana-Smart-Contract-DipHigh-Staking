@@ -3,7 +3,7 @@ use anchor_spl::token;
 use anchor_lang::prelude::*;
 mod instructions;
 
-declare_id!("5XyRwgZ7itiDuHWkoEZW9faagyGiMdCNrLNz2RW3xP9W");
+declare_id!("ADbv96w7D9argjCubvNbf4oKdCFN8nU6yc4Y8ZDbdHnY");
 
 #[program]
 pub mod staking_contract {
