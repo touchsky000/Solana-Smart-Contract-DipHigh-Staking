@@ -30,8 +30,8 @@ pub mod staking_contract {
         Ok(())
     }
     
-    pub fn claim_reward_token(ctx:Context<ClaimTokenPda>, index: u64) -> Result<()> {
-        let _ = instructions::claim_reward(ctx, index)?;
+    pub fn redeposite_token(ctx:Context<ReDepositeTokenPda>, index: u64) -> Result<()> {
+        let _ = instructions::redeposite_token_pda(ctx, index)?;
         Ok(())
     }
 

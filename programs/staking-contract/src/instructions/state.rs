@@ -122,7 +122,7 @@ pub struct DepositeTokenPda<'info> {
 
 #[derive(Accounts)]
 #[instruction()]
-pub struct ClaimTokenPda<'info> {
+pub struct ReDepositeTokenPda<'info> {
     #[account(mut)]
     pub mint_token: Account<'info, token::Mint>,
     #[account(mut)]

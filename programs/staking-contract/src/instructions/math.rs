@@ -12,10 +12,3 @@ pub fn is_unlock(start_stamp: u64, current_stamp: u64, lock_time: u64) -> bool {
     }
 }
 
-pub fn is_available_daily(current_stamp: u64, claim_date: u64) -> bool {
-    if current_stamp - claim_date > (24 * 3600) as u64 {
-        return true;
-    } else {
-        return false
-    }
-}
