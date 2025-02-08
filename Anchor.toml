@@ -5,13 +5,13 @@ seeds = true
 skip-lint = false
 
 [programs.localnet]
-staking_contract = "ADbv96w7D9argjCubvNbf4oKdCFN8nU6yc4Y8ZDbdHnY"
+staking_contract = "GnK7Z56HpSARf4CjArm4ymNrbwfE8Fw8984kTgXxrXzW"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Devnet"
+cluster = "Localnet"
 wallet = "/home/whitehorse/.config/solana/id.json"
 
 [scripts]

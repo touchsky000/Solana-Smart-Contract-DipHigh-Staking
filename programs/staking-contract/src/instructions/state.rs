@@ -22,12 +22,24 @@ pub struct AdminManager{
 #[account]
 #[derive(InitSpace)]
 pub struct UserHistory{
-    #[max_len(400)]
+    #[max_len(100)]
     pub staking_amount: Vec<u64>,
-    #[max_len(400)]
+
+    #[max_len(100)]
     pub staking_start: Vec<u64>,
-    #[max_len(400)]
+
+    #[max_len(100)]
     pub staking_end: Vec<u64>,
+
+    #[max_len(100)]
+    pub staking_period: Vec<u64>,
+
+    #[max_len(100)]
+    pub staking_apy: Vec<u64>,
+    
+    #[max_len(100)]
+    pub claim_date: Vec<u64>,
+
     pub bump :u8
 }
 
@@ -192,16 +204,3 @@ pub struct WithDrawToken<'info> {
     pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
 }
 
-#[error_code]
-pub enum StakingError {
-    #[msg("TokenLocked")]
-    TokenLocked,
-    #[msg("Active vesting period exists")]
-    ActiveVestingExists,
-    #[msg("Allocation amount too large")]
-    AllocationAmountTooLarge,
-    #[msg("Sale not started")]
-    SaleNotStarted,
-    #[msg("Sale not ended")]
-    SaleNotEnded,
-}

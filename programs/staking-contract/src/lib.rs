@@ -3,7 +3,7 @@ use anchor_spl::token;
 use anchor_lang::prelude::*;
 mod instructions;
 
-declare_id!("ADbv96w7D9argjCubvNbf4oKdCFN8nU6yc4Y8ZDbdHnY");
+declare_id!("GnK7Z56HpSARf4CjArm4ymNrbwfE8Fw8984kTgXxrXzW");
 
 #[program]
 pub mod staking_contract {
@@ -25,13 +25,13 @@ pub mod staking_contract {
         Ok(())
     }
     
-    pub fn deposite_token(ctx:Context<DepositeTokenPda>, amount: u64) -> Result<()> {
-        let _ = instructions::deposite_token_pda(ctx , amount)?;
+    pub fn deposite_token(ctx:Context<DepositeTokenPda>, amount: u64, period: u64, apy: u64) -> Result<()> {
+        let _ = instructions::deposite_token_pda(ctx , amount, period, apy)?;
         Ok(())
     }
     
-    pub fn claim_reward_token(ctx:Context<ClaimTokenPda>) -> Result<()> {
-        let _ = instructions::claim_reward(ctx)?;
+    pub fn claim_reward_token(ctx:Context<ClaimTokenPda>, index: u64) -> Result<()> {
+        let _ = instructions::claim_reward(ctx, index)?;
         Ok(())
     }
 

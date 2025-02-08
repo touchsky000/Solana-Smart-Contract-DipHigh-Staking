@@ -37,7 +37,7 @@ export const convertFromHextToInt = async (array) => {
 export const convertToBN = async (array) => {
     let result = array
     for (let i = 0; i < array.length; i++) {
-        result[i] = result[i].toNumber() / ( 10 ** 9 )
+        result[i] = result[i].toNumber() / (10 ** 9)
     }
     return result
 }
@@ -272,6 +272,8 @@ export const stake_token = async (
     USER_ADDRESS: PublicKey,
     TOKEN_VAULT_ADDRESS: PublicKey,
     amount: number,
+    period: number,
+    apy: number,
 ) => {
     const transaction = createTransaction();
 
@@ -309,11 +311,13 @@ export const stake_token = async (
 
     const mint = await provider.connection.getTokenSupply(MINT_ADDRESS);
     const decimals = mint.value.decimals;
-    let send_amount = amount * 10 ** decimals;
+    let user_amount = new anchor.BN(amount * 10 ** decimals);
+    let user_period = new anchor.BN(period)
+    let user_apy = new anchor.BN(apy)
 
     transaction.add(
         await program.methods
-            .depositeToken(new anchor.BN(send_amount))
+            .depositeToken(user_amount, user_period, user_apy)
             .accounts({
                 userAta: userAta,
                 tokenVaultAta: tokenVaultAta,
@@ -332,7 +336,7 @@ export const claim_token = async (
     MINT_ADDRESS: PublicKey,
     USER_ADDRESS: PublicKey,
     TOKEN_VAULT_ADDRESS: PublicKey,
-    amount: number,
+    index: number,
     programStandard: PublicKey
 ) => {
 
@@ -375,7 +379,7 @@ export const claim_token = async (
     const decimals = mint.value.decimals;
 
     const claimSign = await program.methods
-        .claimRewardToken()
+        .claimRewardToken(new anchor.BN(index))
         .accounts({
             userAta: userAta,
             tokenVaultAta: tokenVaultAta,
