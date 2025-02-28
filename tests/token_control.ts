@@ -330,70 +330,6 @@ export const stake_token = async (
     return tx
 }
 
-export const claim_token = async (
-    provider: any,
-    program: Program<StakingContract>,
-    MINT_ADDRESS: PublicKey,
-    USER_ADDRESS: PublicKey,
-    TOKEN_VAULT_ADDRESS: PublicKey,
-    index: number,
-    programStandard: PublicKey
-) => {
-
-    const transaction = createTransaction();
-
-    const userAta = getAssociatedTokenAddressSync(
-        MINT_ADDRESS,
-        USER_ADDRESS,
-        true,
-        programStandard
-    );
-
-    const usererAtaInstruction =
-        createAssociatedTokenAccountIdempotentInstruction(
-            USER_ADDRESS,
-            userAta,
-            USER_ADDRESS,
-            MINT_ADDRESS,
-        );
-
-    transaction.add(usererAtaInstruction);
-
-    const tokenVaultAta = getAssociatedTokenAddressSync(
-        MINT_ADDRESS,
-        TOKEN_VAULT_ADDRESS,
-        true,
-    );
-
-    const tokenVaultAtaInstruction =
-        createAssociatedTokenAccountIdempotentInstruction(
-            USER_ADDRESS,
-            tokenVaultAta,
-            TOKEN_VAULT_ADDRESS,
-            MINT_ADDRESS,
-        );
-
-    transaction.add(tokenVaultAtaInstruction);
-
-    const mint = await provider.connection.getTokenSupply(MINT_ADDRESS);
-    const decimals = mint.value.decimals;
-
-    const claimSign = await program.methods
-        .claimRewardToken(new anchor.BN(index))
-        .accounts({
-            userAta: userAta,
-            tokenVaultAta: tokenVaultAta,
-            mintToken: MINT_ADDRESS
-        })
-        .instruction()
-
-    transaction.add(claimSign);
-
-    const tx = await provider.sendAndConfirm(transaction)
-    console.log("tx =>", tx)
-    return tx
-}
-
 export const withdraw_token = async (
     provider: any,
     program: Program<StakingContract>,
@@ -454,6 +390,66 @@ export const withdraw_token = async (
     return tx
 }
 
+export const redeposite_token = async (
+    provider: any,
+    program: Program<StakingContract>,
+    index: number,
+    MINT_ADDRESS: PublicKey,
+    USER_ADDRESS: PublicKey,
+    TOKEN_VAULT_ADDRESS: PublicKey,
+    programStandard: PublicKey
+) => {
+
+    const transaction = createTransaction();
+
+    const userAta = getAssociatedTokenAddressSync(
+        MINT_ADDRESS,
+        USER_ADDRESS,
+        true,
+        programStandard
+    );
+
+    const usererAtaInstruction =
+        createAssociatedTokenAccountIdempotentInstruction(
+            USER_ADDRESS,
+            userAta,
+            USER_ADDRESS,
+            MINT_ADDRESS,
+        );
+
+    transaction.add(usererAtaInstruction);
+
+    const tokenVaultAta = getAssociatedTokenAddressSync(
+        MINT_ADDRESS,
+        TOKEN_VAULT_ADDRESS,
+        true,
+    );
+
+    const tokenVaultAtaInstruction =
+        createAssociatedTokenAccountIdempotentInstruction(
+            USER_ADDRESS,
+            tokenVaultAta,
+            TOKEN_VAULT_ADDRESS,
+            MINT_ADDRESS,
+        );
+
+    transaction.add(tokenVaultAtaInstruction);
+
+    const claimSign = await program.methods
+        .redepositeToken(new anchor.BN(index))
+        .accounts({
+            userAta: userAta,
+            tokenVaultAta: tokenVaultAta,
+            mintToken: MINT_ADDRESS
+        })
+        .instruction()
+
+    transaction.add(claimSign);
+
+    const tx = await provider.sendAndConfirm(transaction)
+    return tx
+}
+
 
 
 export const getTokenBalance = async (connection, walletAddress, mintAddress) => {
@@ -468,4 +464,12 @@ export const getTokenBalance = async (connection, walletAddress, mintAddress) =>
 export const getTokenDecimal = async (connection, mintAddress) => {
     const mintAccount = await getMint(connection, mintAddress);
     return Number(mintAccount.decimals);
+}
+
+export const advanceTime = async (provider, seconds) => {
+    const connection = provider.connection;
+    const latestBlockTime = await connection.getBlockTime('finalized'); // Get current block time
+    const futureTimestamp = latestBlockTime + seconds; // Set the time in the future
+    // Simulate advancing time by "fast forwarding"
+    await provider.connection.setTime(futureTimestamp); // You'd need this to manipulate the time
 }

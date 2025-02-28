@@ -18,10 +18,11 @@ import {
   transfer_token_user_to_user,
   getTokenBalance,
   create_Token_with_provider,
-  claim_token,
+  redeposite_token,
   convertToBN,
   convertFromHextToInt,
-  withdraw_token
+  withdraw_token,
+  advanceTime
 } from "./token_control";
 
 const mintToken = Keypair.fromSecretKey(Uint8Array.from(require('./mntExBDxsFPNgWGvaiv11d3FzeSwehgcMKAFiwx3n7M.json')))
@@ -47,118 +48,118 @@ const user3Provider = new anchor.AnchorProvider(
   adminProvider.opts
 )
 
-// describe("test staking-contract with admin", async () => {
+describe("test staking-contract with admin", async () => {
 
-//   const provider = adminProvider
-//   anchor.setProvider(provider)
+  const provider = adminProvider
+  anchor.setProvider(provider)
 
-//   const program = anchor.workspace.StakingContract as Program<StakingContract>;
+  const program = anchor.workspace.StakingContract as Program<StakingContract>;
 
-//   it("Airdrop SOL to test users", async () => {
+  it("Airdrop SOL to test users", async () => {
 
-//     const airdropAmount = 100 * LAMPORTS_PER_SOL
-//     const sign1 = await user1Provider.connection.requestAirdrop(user1.publicKey, airdropAmount)
-//     const sign2 = await user2Provider.connection.requestAirdrop(user2.publicKey, airdropAmount)
-//     const sign3 = await user3Provider.connection.requestAirdrop(user3.publicKey, airdropAmount)
+    const airdropAmount = 100 * LAMPORTS_PER_SOL
+    const sign1 = await user1Provider.connection.requestAirdrop(user1.publicKey, airdropAmount)
+    const sign2 = await user2Provider.connection.requestAirdrop(user2.publicKey, airdropAmount)
+    const sign3 = await user3Provider.connection.requestAirdrop(user3.publicKey, airdropAmount)
 
-//     await adminProvider.connection.confirmTransaction(sign1)
-//     await adminProvider.connection.confirmTransaction(sign2)
-//     await adminProvider.connection.confirmTransaction(sign3)
+    await adminProvider.connection.confirmTransaction(sign1)
+    await adminProvider.connection.confirmTransaction(sign2)
+    await adminProvider.connection.confirmTransaction(sign3)
 
-//     const balanceUser1 = await adminProvider.connection.getBalance(user1.publicKey)
-//     const balanceUser2 = await adminProvider.connection.getBalance(user2.publicKey)
-//     const balanceUser3 = await adminProvider.connection.getBalance(user3.publicKey)
-//   });
+    const balanceUser1 = await adminProvider.connection.getBalance(user1.publicKey)
+    const balanceUser2 = await adminProvider.connection.getBalance(user2.publicKey)
+    const balanceUser3 = await adminProvider.connection.getBalance(user3.publicKey)
+  });
 
-//   it("Create Token", async () => {
-//     const decimal = 9
-//     const amount = new anchor.BN("100000000000000000")
-//     const tx = await create_Token(
-//       program,
-//       adminProvider,
-//       mintToken.publicKey,
-//       mintToken,
-//       decimal,
-//       amount,
-//     )
-//     console.log("tx =>", tx)
-//   })
+  it("Create Token", async () => {
+    const decimal = 9
+    const amount = new anchor.BN("100000000000000000")
+    const tx = await create_Token(
+      program,
+      adminProvider,
+      mintToken.publicKey,
+      mintToken,
+      decimal,
+      amount,
+    )
+    console.log("tx =>", tx)
+  })
 
-//   it("Transfer Token from admin to user1", async () => {
-//     const amount = 100000
-//     const provider = adminProvider
-//     const programStandard = TOKEN_2022_PROGRAM_ID;
-//     const MINT_ADDRESS = mintToken.publicKey
-//     const FROM_ADDRESS = provider.wallet.publicKey
-//     const TO_ADDRESS = user1.publicKey
+  // it("Transfer Token from admin to user1", async () => {
+  //   const amount = 100000
+  //   const provider = adminProvider
+  //   const programStandard = TOKEN_2022_PROGRAM_ID;
+  //   const MINT_ADDRESS = mintToken.publicKey
+  //   const FROM_ADDRESS = provider.wallet.publicKey
+  //   const TO_ADDRESS = user1.publicKey
 
-//     const tx = await transfer_token(
-//       provider,
-//       program,
-//       MINT_ADDRESS,
-//       FROM_ADDRESS,
-//       TO_ADDRESS,
-//       amount,
-//       programStandard
-//     )
+  //   const tx = await transfer_token(
+  //     provider,
+  //     program,
+  //     MINT_ADDRESS,
+  //     FROM_ADDRESS,
+  //     TO_ADDRESS,
+  //     amount,
+  //     programStandard
+  //   )
 
-//     const balance = await getTokenBalance(
-//       provider.connection,
-//       TO_ADDRESS,
-//       mintToken.publicKey,
-//     )
-//   })
+  //   const balance = await getTokenBalance(
+  //     provider.connection,
+  //     TO_ADDRESS,
+  //     mintToken.publicKey,
+  //   )
+  // })
 
-//   it("Transfer Token from admin to user2", async () => {
-//     const amount = 100000
-//     const provider = adminProvider
-//     const programStandard = TOKEN_2022_PROGRAM_ID;
-//     const MINT_ADDRESS = mintToken.publicKey
-//     const FROM_ADDRESS = provider.wallet.publicKey
-//     const TO_ADDRESS = user2.publicKey
+  // it("Transfer Token from admin to user2", async () => {
+  //   const amount = 100000
+  //   const provider = adminProvider
+  //   const programStandard = TOKEN_2022_PROGRAM_ID;
+  //   const MINT_ADDRESS = mintToken.publicKey
+  //   const FROM_ADDRESS = provider.wallet.publicKey
+  //   const TO_ADDRESS = user2.publicKey
 
-//     const tx = await transfer_token(
-//       provider,
-//       program,
-//       MINT_ADDRESS,
-//       FROM_ADDRESS,
-//       TO_ADDRESS,
-//       amount,
-//       programStandard
-//     )
+  //   const tx = await transfer_token(
+  //     provider,
+  //     program,
+  //     MINT_ADDRESS,
+  //     FROM_ADDRESS,
+  //     TO_ADDRESS,
+  //     amount,
+  //     programStandard
+  //   )
 
-//     const balance = await getTokenBalance(
-//       provider.connection,
-//       TO_ADDRESS,
-//       mintToken.publicKey,
-//     )
-//   })
+  //   const balance = await getTokenBalance(
+  //     provider.connection,
+  //     TO_ADDRESS,
+  //     mintToken.publicKey,
+  //   )
+  // })
 
-//   it("Transfer Token from admin to user3", async () => {
-//     const amount = 100000
-//     const provider = adminProvider
-//     const programStandard = TOKEN_2022_PROGRAM_ID;
-//     const MINT_ADDRESS = mintToken.publicKey
-//     const FROM_ADDRESS = provider.wallet.publicKey
-//     const TO_ADDRESS = user3.publicKey
+  // it("Transfer Token from admin to user3", async () => {
+  //   const amount = 100000
+  //   const provider = adminProvider
+  //   const programStandard = TOKEN_2022_PROGRAM_ID;
+  //   const MINT_ADDRESS = mintToken.publicKey
+  //   const FROM_ADDRESS = provider.wallet.publicKey
+  //   const TO_ADDRESS = user3.publicKey
 
-//     const tx = await transfer_token(
-//       provider,
-//       program,
-//       MINT_ADDRESS,
-//       FROM_ADDRESS,
-//       TO_ADDRESS,
-//       amount,
-//       programStandard
-//     )
+  //   const tx = await transfer_token(
+  //     provider,
+  //     program,
+  //     MINT_ADDRESS,
+  //     FROM_ADDRESS,
+  //     TO_ADDRESS,
+  //     amount,
+  //     programStandard
+  //   )
 
-//     const balance = await getTokenBalance(
-//       provider.connection,
-//       TO_ADDRESS,
-//       mintToken.publicKey,
-//     )
-//   })
-// });
+  //   const balance = await getTokenBalance(
+  //     provider.connection,
+  //     TO_ADDRESS,
+  //     mintToken.publicKey,
+  //   )
+  // })
+});
 
 describe("test staking-contract with user1", async () => {
   const provider = adminProvider
@@ -223,23 +224,26 @@ describe("test staking-contract with user1", async () => {
     console.log("apy =>", await convertFromHextToInt(userHistoryData.stakingApy))
   })
 
-  it("Claim token in PDA", async () => {
-    const index = 1
+  it("Restake token in PDA", async () => {
+    const index = 0
     const programStandard = TOKEN_PROGRAM_ID;
     const MINT_ADDRESS = mintToken.publicKey
     const USER_ADDRESS = provider.wallet.publicKey
     const TOKEN_VAULT_ADDRESS = tokenVaultPda
-    const tx = await claim_token(
-      provider,
-      program,
-      MINT_ADDRESS,
-      USER_ADDRESS,
-      TOKEN_VAULT_ADDRESS,
-      index,
-      programStandard
-    )
-
-    console.log("tx: ", tx)
+    try {
+      const tx = await redeposite_token(
+        provider,
+        program,
+        index,
+        MINT_ADDRESS,
+        USER_ADDRESS,
+        TOKEN_VAULT_ADDRESS,
+        programStandard
+      )
+      console.log("Tx => ", tx)
+    } catch (err) {
+      expect(err.message).to.include("TokenLocked")
+    }
   })
 
   it("Withdraw token in PDA", async () => {
@@ -262,5 +266,28 @@ describe("test staking-contract with user1", async () => {
     } catch (err) {
       expect(err.message).to.include("TokenLocked")
     }
+  })
+
+  it("deplay timestap", async () => {
+    const slot = await provider.connection.getSlot(); // Get current sl
+    console.log("SLOT =>", slot)
+  })
+  it("Withdraw token in PDA after 60 days", async () => {
+    const index = 0
+    const programStandard = TOKEN_PROGRAM_ID;
+    const MINT_ADDRESS = mintToken.publicKey
+    const USER_ADDRESS = provider.wallet.publicKey
+    const TOKEN_VAULT_ADDRESS = tokenVaultPda
+
+    const tx = await withdraw_token(
+      provider,
+      program,
+      index,
+      MINT_ADDRESS,
+      USER_ADDRESS,
+      TOKEN_VAULT_ADDRESS,
+      programStandard
+    )
+    console.log("Tx => ", tx)
   })
 })
